@@ -1,0 +1,420 @@
+/* ==========================================================================
+   mobile.css — the phone build.
+
+   THIS IS NOT THE DESKTOP LAYOUT MADE NARROW. The desktop page is a fixed
+   viewport with a virtual scroll, five absolutely-composed screens and two
+   WebGL contexts. None of that is right on a phone: the compositions depend
+   on a wide channel with the subject in it, the virtual scroll fights the
+   browser's own, and 80k points a frame is somebody's battery.
+
+   So the phone gets a different build of the same site:
+
+     native scroll        the document scrolls, because the platform is
+                          better at it than we are
+     stacked sections     one column, in reading order
+     a STATIC subject     assets/bust-mobile.webp, rendered at build time by
+                          tools/make-og.py from the same construction
+     the ground still     the tear is a generated SVG edge instead of a
+       turns              shader — same torn character, no noise quad
+     everything else      type scale, microtype, telemetry, the bar, the
+       survives           red, the copy, the tone
+
+   LOADED LAST, and that is the point: every rule here overrides one in
+   site.css at equal specificity, so load order is what makes the phone
+   layout win. Deleting the <link> leaves the desktop site untouched.
+   ========================================================================== */
+
+@media (max-width: 760px) {
+
+  /* THE ONLY PLACE THE BREAKPOINT IS WRITTEN DOWN. The query above is the
+     authority; this line is how JavaScript finds out what it decided. See
+     --build in css/base.css. */
+  :root{ --build:mobile; }
+
+  /* ---- the desktop machinery, off -------------------------------------- */
+  .sub, .tear, .hud, .frag--vert, .frag--echo, .loader{ display:none !important; }
+
+  html, body{ overflow:visible; height:auto; }
+  body{ -webkit-text-size-adjust:100%; }
+
+  /* ---- the reserved bands, named once ---------------------------------- */
+  :root{
+    --m-head:28px;          /* the thin SUBSTRATE // PHASE readout */
+    --m-band:32vh;          /* the object */
+    /* WHATEVER THE PAGE IS STANDING ON. The band and the fade beneath it
+       both read this, so the object's surround is always exactly the
+       section's own ground and never a panel in front of it. */
+    --m-ground:var(--c-void);
+  }
+  body.is-light{ --m-ground:#f1f1ed; }
+
+  /* ---- READABLE BODY TYPE ----------------------------------------------
+     82 of 86 text elements on this page were 10px. That is a telemetry size
+     borrowed for prose, and it is uppercase mono on top, which removes the
+     word-shape cue that makes small text readable at all. 13px is still
+     small — it is meant to be — but it is a size a person reads rather than
+     decodes. The genuinely tiny things (the bar, the readout, the phase
+     indices) keep 10px, because those ARE telemetry. */
+  .annot p, .annot__foot, .flow__foot, .field__col p,
+  .field__note, .frag, .disp__sub, .disp__note, .pslot span{
+    font-size:13px; line-height:1.75;
+  }
+
+  /* ---- the subject: A BAND OF ITS OWN, not a stain under the text ------
+
+     It used to be a fixed image at 20% opacity sitting BEHIND the copy,
+     centred on the viewport. That is the worst of the three available
+     states: on SOLID it was a smudge behind a headline, on MESH it printed
+     straight through rows 001-004 and the USED FOR column of the densest
+     table on the site, and on the light screens it disappeared entirely.
+     Neither a feature nor absent, and illegible either way.
+
+     So it gets a band. Pinned under the header, opaque, full width, with
+     every section's content starting below it — the object is on screen the
+     whole way down and can never be behind a word again. This is also the
+     shape that per-phase renders would drop straight into if we make them:
+     the band is already the right hole.
+
+     THE BAND CARRIES ITS OWN GROUND because the page's ground flips under
+     it. js/mobile.js already toggles body.is-light off the light zone, so
+     the same class that turns the sections turns this. Without an opaque
+     ground here, the copy of the NEXT section scrolls up through the
+     object, which is the same overlap in a new place. */
+  .m-bust{
+    display:block; position:fixed; z-index:5; pointer-events:none;
+    left:0; right:0; top:var(--m-head); height:var(--m-band);
+    /* THE SOURCE IS HERE, INSIDE THE QUERY, ON PURPOSE — see index.html.
+       A background-image in a media query that does not match is never
+       fetched, which is what keeps this off the desktop build entirely. */
+    background:var(--m-ground) url('../assets/bust-mobile.webp')
+               center/contain no-repeat;
+    /* NO BORDER, AND THE GROUND IS THE PAGE'S OWN. Both of those were what
+       made this read as a separate panel bolted to the top of the document
+       rather than as the page's own subject: a rule across the full width
+       plus a background one shade off the body draws a box, and the eye
+       reads a box as a different surface. Same colour, no line, and the
+       only thing in the band is the object. */
+    opacity:1;
+    transition:opacity 420ms var(--ease-out, ease),
+               background-color 320ms linear;
+  }
+  /* THE OBJECT'S COLOUR NEVER CHANGES, on any ground.
+
+     This used to be filter:invert(1), inherited from the version that sat at
+     20% opacity behind the copy — where inverting was the only way light
+     points stayed visible once the paper arrived. At full strength in a band
+     of its own it inverts the HUE of a colour render instead: the cobalt hat
+     came out orange and the panel came out in negative, which is a different
+     character on half the site.
+
+     It does not need the help any more. The render carries its own colour
+     against both grounds, so the ground moves and the subject does not. */
+  body.is-light .m-bust{ filter:none; }
+
+  /* Content does not get guillotined at the band's edge — it dissolves into
+     it. A hard cut across a line of type reads as a clipping bug; this reads
+     as depth, and it is the nearest thing the phone has to the desktop's
+     distance fade. */
+  .m-bust::after{
+    content:''; position:absolute; left:0; right:0; top:100%; height:34px;
+    background:linear-gradient(to bottom, var(--m-ground), transparent);
+  }
+  /* AND THE ENDING TAKES IT, the way the desktop tear does — see the third
+     observer in js/mobile.js. Faded rather than display:none so the object
+     leaves as the red arrives instead of vanishing between two frames. */
+  body.is-ending .m-bust{ opacity:0; }
+
+  /* ---- the stage becomes a document ------------------------------------ */
+  .stage{ position:static; inset:auto; pointer-events:auto; }
+  .track{ position:static; transform:none !important; will-change:auto; }
+
+  .pane{
+    position:relative; height:auto;
+    /* A SCREEN EACH, still. The desktop build gives every phase a full
+       viewport, and collapsing them to content height on mobile turned five
+       deliberate beats into one long scroll — the narrative is the point,
+       so the pacing has to survive even though the mechanism cannot. */
+    min-height:88vh;
+    /* TOP, NOT CENTRE. Measured on SOLID at 375x812: a 715px section with
+       266px of nothing above the copy and 243px below it — 71% of the
+       screen empty, around three lines of text. Centring content in a box
+       taller than itself reads as unfinished, not as spacious. Anchored to
+       the top, the section ends when it ends and the next one starts. */
+    display:flex !important; flex-direction:column; justify-content:flex-start;
+    padding:calc(var(--m-head) + var(--m-band) + 26px) 22px 64px;
+    /* THE DISTANCE FADE, PORTED. On desktop every pane fades on how far it
+       is from its own screen, which is what makes five sections read as five
+       beats rather than one document. Native scrolling cannot drive that per
+       frame without a scroll handler, so js/mobile.js marks whichever
+       section does NOT own the middle of the screen and CSS does the rest —
+       a crossing, not a frame loop.
+
+       .is-far rather than .is-near on purpose: with no JavaScript at all,
+       nothing is marked and every section is simply legible. A default that
+       needs a script to become readable is a default that fails badly. */
+    opacity:1;
+  }
+  /* THE CHILDREN, NOT THE SECTION. Fading .pane itself is correct on desktop,
+     where panes are transparent and the ground is painted by WebGL behind
+     them — there, opacity touches only type. Here .pane--field and
+     .pane--dispersal paint their OWN #f1f1ed, so fading the element faded
+     the paper too and let the near-black body through it:
+     0.34 x 241 + 0.66 x 7 = rgb(87,87,87), a mid-grey slab across the
+     bottom third of the screen. Fading each child leaves the ground alone.
+     The torn edge is a ::before and is not a child, so it stays solid. */
+  .pane > *{ transition:opacity 420ms var(--ease-out, ease); }
+  .pane.is-far > *{ opacity:.34; }
+
+  /* ---- the ground turns, once, at the fourth section -------------------
+     Applied to the SECTIONS rather than to <body> so a phone user scrolling
+     back up sees it reverse, exactly as the desktop tear does. */
+  .pane--field, .pane--dispersal, .m-lightzone{
+    background:#f1f1ed; color:#111;
+    --ink:#111111; --fog:#4a4a4a; --slate:#6b6b6b; --label:#8e8e8e;
+    --line:rgba(0,0,0,.14);
+  }
+  /* The torn edge, generated by tools/make-og.py from the same noise the
+     desktop shader uses. Sits on the leading edge of the light zone. */
+  .pane--field::before{
+    content:''; position:absolute; left:0; right:0; top:-46px; height:48px;
+    background:#f1f1ed;
+    -webkit-mask:url('../assets/tear-edge.svg') bottom/100% 100% no-repeat;
+    mask:url('../assets/tear-edge.svg') bottom/100% 100% no-repeat;
+  }
+
+  /* ---- type: the hollow scale survives, at phone sizes ------------------ */
+  .void__say{
+    padding-left:0; max-width:none;
+    font-size:clamp(2rem, 10.5vw, 3rem); line-height:1.02;
+  }
+
+  .disp__anchor{ position:static; max-width:none; margin-bottom:26px; }
+  .disp__title{ font-size:clamp(1.6rem, 8vw, 2.2rem); letter-spacing:.22em; }
+
+  .field__say{ font-size:clamp(1.5rem, 7.5vw, 2.1rem); }
+  .field__mid{ position:static; margin-bottom:26px; max-width:none; }
+
+  /* ---- the annotation collapses to one column ----------------------------
+     THE LEADER LINES GO, and they have to. They point at a subject that is
+     in the middle of the screen on desktop and pinned in a band at the TOP
+     here — aiming a line at it from copy underneath would cross the whole
+     page. js/annot.js is not in the phone's script list at all, so nothing
+     draws into the svg; this just makes sure the empty element cannot
+     occupy space or catch a tap. The blocks become an ordinary stacked
+     read, which is what the copy was before the arrows. */
+  .pane--river{ display:block; }
+  .annot__lines{ display:none !important; }
+  .annot{
+    position:static; max-width:none; text-align:left !important;
+    margin:0 0 22px;
+  }
+  .annot__head{
+    position:static; margin:0 0 20px;
+  }
+  .annot__foot{
+    position:static; margin:6px 0 0; max-width:none;
+  }
+
+  /* ---- the flow: one column again ---------------------------------------
+     Two gutters flanking a subject is a desktop arrangement; here there is
+     no subject between them to flank, so the two halves stack back into the
+     single sequence they always were. */
+  .flow{
+    position:static; width:auto; left:auto; right:auto;
+    text-align:left !important; gap:20px; margin:0 0 20px;
+  }
+  .flow p{ font-size:13px; }
+
+  /* ---- the project cards ------------------------------------------------
+     Full width and in flow. pointer-events is re-enabled unconditionally
+     here: there is no distance fade on this build, so there is no faded
+     pane whose links need suppressing. */
+  .disp__feat{
+    position:static; width:auto; margin:26px 0 0; gap:12px;
+  }
+  .pcard{ pointer-events:auto; }
+  .pcard span{ font-size:13px; line-height:1.7; }
+
+  /* ---- 04's new blocks --------------------------------------------------- */
+  .field__lbl{ font-size:13px; line-height:1.65; }
+  .field__goal{ font-size:13px; margin-top:16px; max-width:none; }
+
+  /* The IDX/LAYER/USED FOR table is gone from 03 entirely, so its five
+     phone overrides went with it. Only the paragraph that sat under it
+     survives, and it just needs to stop being absolutely positioned. */
+  .flow__foot{ position:static; margin:24px 0 0; max-width:none; }
+
+  /* ---- word field ------------------------------------------------------
+     REORDERED, not just reflowed. In the markup the heading sits BETWEEN
+     the two word columns, because on desktop it lives in the empty corner
+     while they flank the subject. Stacked on a phone that puts half the
+     words above the heading they belong to. Flex `order` moves the heading
+     to the front without touching the DOM, so the desktop composition and
+     the reading order on mobile can both be right. */
+  /* flex-direction MUST be reset. The shared .pane rule above sets
+     `column` so every other section stacks and centres; inheriting it here
+     made `flex:1 0 100%` a HEIGHT basis, so the two word columns shrank to
+     their content and stacked instead of sharing a row. `align-content`
+     rather than `justify-content` does the vertical centring once the
+     direction is row and the lines wrap. */
+  .pane--field{
+    display:flex !important; flex-direction:row; flex-wrap:wrap;
+    align-items:flex-start; align-content:center; justify-content:flex-start;
+    column-gap:6%;
+  }
+  .field__mid{ order:1; flex:1 0 100%; }
+  .field__col{
+    order:2; flex:1 1 44%; width:auto; min-width:0;
+    margin:0; line-height:1.95;
+  }
+  .field__col--l{ text-align:left; }
+  .field__col--r{ order:3; }
+  .field__note{
+    order:4; flex:1 0 100%;
+    position:static; margin:22px 0 0; text-align:left !important;
+  }
+
+  /* ---- dispersal: the fragments become a stack -------------------------- */
+  .pane--dispersal{ display:block; }
+  .frag{ position:static !important; transform:none !important;
+         margin:0 0 18px; max-width:none; }
+  .disp__slots{
+    position:static; transform:none; grid-template-columns:1fr; gap:12px;
+    margin-top:8px;
+  }
+
+  /* ---- footer -----------------------------------------------------------
+     IT HAS TO PAINT ITS OWN RED, and this was the worst bug on the phone.
+
+     On desktop the footer has no background on purpose: the red is GROUND,
+     painted by js/tear.js onto the same WebGL quad and torn by the same
+     boundary function as the light paper. This build hides that canvas and
+     never mounts that module — so .ftr was transparent over the black body,
+     while its type was still coloured for a red ground it never got.
+
+     The result was OBSERVATION CONCLUDED in near-black on near-black, and
+     all three contact links invisible. On a portfolio, on a phone, that is
+     the single most expensive pixel on the site.
+
+     It also closes the seam. The light zone used to simply stop and the
+     page fell back to black with a hard horizontal edge; now the sequence
+     is dark, tear, light, tear, red, exactly as the desktop reads.
+
+     z-index because .m-bust is position:fixed at z-index 0 and would
+     otherwise float over the ending — on desktop the red burns the subject
+     away, so covering it here is the same statement. */
+  .ftr{
+    position:relative; inset:auto; z-index:1;
+    opacity:1 !important; visibility:visible;
+    min-height:100vh; padding:80px 22px; gap:34px;
+    background:var(--red); color:#0a0a0a;
+  }
+  /* The same torn edge the light zone uses, in red, on the leading edge —
+     one generated SVG serving both transitions, as the one shader does. */
+  .ftr::before{
+    content:''; position:absolute; left:0; right:0; top:-46px; height:48px;
+    background:var(--red);
+    -webkit-mask:url('../assets/tear-edge.svg') bottom/100% 100% no-repeat;
+    mask:url('../assets/tear-edge.svg') bottom/100% 100% no-repeat;
+  }
+  /* 4.74:1 on the red, and now there is actually red under them. */
+  .ftr__nav a, .ftr__nav a i{ color:#000; }
+  .ftr__notes, .ftr__foot, .ftr .dim{ color:#231010; }
+  .ftr__band{ border-color:#0a0a0a; }
+  .ftr__title{ font-size:clamp(2.2rem, 13vw, 4rem); }
+  .ftr__band{ width:100%; height:96px; }
+  .ftr__nav{ gap:26px; flex-wrap:wrap; }
+  .ftr__notes{ flex-direction:column; gap:20px; }
+  .ftr__foot{ text-align:center; line-height:1.9; }
+
+  /* ---- the bar: a real control strip, not a caption --------------------
+     Measured: a 47x15px tap target in a 28px bar. The floor everyone agrees
+     on is 44x44, so this was a third of the height of a usable button, five
+     of them shoulder to shoulder.
+
+     AND IT HAD NO SAFE-AREA ALLOWANCE, which on any notched iPhone means the
+     home indicator sits on top of it and the last row of anything fixed to
+     the bottom is simply not tappable. env() resolves to 0 everywhere else,
+     so this costs nothing on hardware that does not need it. */
+  .bar{
+    position:fixed; padding:0 6px;
+    height:auto; min-height:52px;
+    padding-bottom:env(safe-area-inset-bottom, 0px);
+  }
+  .bar__btn, .bar__mail{
+    min-height:44px; display:inline-flex; align-items:center;
+    padding:0 7px;
+  }
+  .bar.is-out{ transform:none; }          /* never leaves on mobile */
+  /* The bar has three children and 375px. Without min-width:0 the phase
+     list refuses to shrink and drives the clock off its own edge — the
+     flexbox default of min-width:auto, which is the single most common way
+     a flex row overflows. */
+  /* 7px, not 11: the 44px tap targets brought their own padding, which put
+     the list 4px over the edge again. The gap is the cheapest 8px on the
+     bar — the buttons already have breathing room inside themselves. */
+  /* A FADE, NOT A CUT. This strip scrolls horizontally, and a name sliced
+     flat against the right edge reads as a layout bug rather than as an
+     invitation to swipe — which is exactly what DIFFUSE clipped to DIFFU
+     looked like. Fading the last few pixels is the standard way to say
+     "there is more this way" without spending width on an arrow. */
+  .bar__left{
+    gap:7px; overflow-x:auto; scrollbar-width:none; min-width:0; flex:1 1 auto;
+    -webkit-mask-image:linear-gradient(to right, #000 calc(100% - 26px), transparent);
+    mask-image:linear-gradient(to right, #000 calc(100% - 26px), transparent);
+  }
+  .bar__left::-webkit-scrollbar{ display:none; }
+  .bar__btn{ flex:0 0 auto; }
+  .bar__zone{ display:none; }             /* the top readout already says GMT+5:30 */
+  .bar__clock{ flex:0 0 auto; margin-left:10px; }
+  .bar__mail{ flex:0 0 auto; }
+  .bar__mail span{ display:none; }        /* the + mark is enough at this width */
+  body{ padding-bottom:calc(60px + env(safe-area-inset-bottom, 0px)); }
+
+  /* ---- a small live readout, since the HUD is gone ---------------------- */
+  .m-read{
+    display:flex; position:fixed; left:0; right:0; top:0; z-index:50;
+    justify-content:space-between; padding:8px 12px;
+    font-family:var(--font-mono); font-size:9px;
+    letter-spacing:var(--track-ui); text-transform:uppercase;
+    color:var(--label); background:rgba(7,7,7,.82);
+    backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
+    border-bottom:1px solid var(--line);
+  }
+  body.is-light .m-read{ background:rgba(241,241,237,.85); }
+  .m-read b{ font-weight:400; color:var(--red); }
+}
+
+/* Everything above is phone-only; this keeps the two mobile-only elements
+   out of the desktop layout entirely rather than merely hidden. */
+@media (min-width: 761px) {
+  .m-bust, .m-read{ display:none; }
+}
+
+/* =========================== ACTUAL PHONES ===============================
+   A SECOND, NARROWER STEP, and it has to sit outside the block above rather
+   than inside it — everything after the bar in that block (the top readout,
+   the body padding) belongs to the whole phone range, and folding it into a
+   420px query would quietly drop it on tablets.
+
+   Measured at 375px: the phase list wants 297px and has 271, so DIFFUSE was
+   clipped to DIFFU. It is a scroller, so nothing was unreachable — but a
+   clipped word reads as a broken layout, not as an invitation to swipe.
+
+   What it was clipped BY is the giveaway. The clock is 67px spent on a time
+   the readout at the top of the same screen is already showing, and the copy
+   button had been squeezed to SEVEN pixels: a tap target four times under
+   the 44px minimum, sitting above a footer that offers the same address in
+   a frame you cannot miss. Neither was earning its width.
+
+   Above 420px there is room for all three, so both come back.
+   ========================================================================= */
+@media (max-width: 420px) {
+  .bar__clock, .bar__mail{ display:none; }
+  .bar__left{ flex:1 1 100%; }
+  /* The phase names went from SOLID/MESH/SWARM to INVISIBLE/UNDERNEATH/
+     UNATTENDED, which is roughly 500px of type in a 355px strip. The "+"
+     after each one is decoration and the first thing that can go. */
+  .bar__btn i{ display:none; }
+  .bar__btn{ padding:0 5px; }
+}

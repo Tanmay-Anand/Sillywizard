@@ -1,0 +1,10 @@
+# Normalise line endings. This repo is authored on Windows and deployed from
+# Linux build agents; without this, the first commit from either side rewrites
+# every file and the diff is useless for reviewing anything.
+* text=auto eol=lf
+
+# Binary, never diffed or line-ending-converted.
+*.png binary
+*.jpg binary
+*.webp binary
+*.ico binary

@@ -1,0 +1,19 @@
+# Build scripts and the dev server. Nothing at runtime reads either.
+tools/
+serve.py
+
+# Exploration renders: 2.3 MB of options we did not take.
+assets/options/
+
+# Notes to self, not site content.
+assets/ref/README.txt
+
+# NOT ignored, deliberately: assets/ref/face.jpg — js/face.js samples it at
+# runtime for the hover-reveal portrait. Excluding it does not break the page,
+# it silently falls back to the hand-drawn stand-in.
+
+.DS_Store
+Thumbs.db
+__pycache__/
+*.pyc
+.claude/

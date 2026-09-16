@@ -1,0 +1,214 @@
+/* ==========================================================================
+   base.css — tokens and reset.
+
+   THE TYPE SCALE IS DELIBERATELY HOLLOW. The reference ships 10px for almost
+   everything, 14px for the HUD, then jumps straight to 64/128px with NOTHING
+   in between — no 18px lead, no 24px subhead. That 4.5x void is what makes
+   the composition read as an instrument rather than a document, so it is
+   reproduced here as a rule rather than as an accident. If you ever find
+   yourself reaching for 20px, the answer is 10 or it is 64.
+   ========================================================================== */
+
+:root{
+  /* Space Grotesk carries the display; Space Mono carries every label. They
+     are drawn as a pair, which is the same relationship PP Supply Sans and
+     PP Supply Mono have on the reference. */
+  /* ---- TYPE: TWO LAYERS, SO THE FACES CAN BE SWAPPED IN ONE PLACE ----
+     The bottom layer names the actual families. The layer above names the
+     ROLES, and every rule in the site reads a role, never a family. To move
+     to PP Supply (or anything else) later, change these two lines and
+     nothing else in the codebase — no rule anywhere says 'Space Mono'. */
+  --family-display:'Space Grotesk','Neue Haas Grotesk Text','Inter',-apple-system,
+                   BlinkMacSystemFont,'Helvetica Neue',Arial,sans-serif;
+  --family-ui:'Space Mono',ui-monospace,'SF Mono','Roboto Mono',monospace;
+
+  --font-main:var(--family-display);   /* display / headlines */
+  --font-mono:var(--family-ui);        /* every label, readout and caption */
+
+  /* ---- ground ----
+     NEUTRAL, not warm. The earlier ramp was tinted olive, which fought the
+     red the moment it appeared; the reference's own greys are dead neutral
+     and that is why its single accent reads as loudly as it does. */
+  --c-void:#070707;      /* not pure black: the grain needs somewhere to sit */
+  --c-ink:#e9e9e9;
+  --c-fog:#afafaf;       /* the reference's --c-fog, verbatim */
+  --c-slate:#6e6e6e;     /* --c-slate */
+  --c-label:#636363;     /* --c-label */
+  --c-line:rgba(233,233,233,.10);
+
+  /* ---- the one accent ----
+     The reference's --ui-red. Rationed exactly as hard: it appears on the
+     phase readout, the progress fill, the loader flood, the pane index and
+     hover — and nowhere else. It is deliberately NOT on the subject. */
+  --red:#e8271c;
+  --red-dim:rgba(232,39,28,.42);
+  --red-ghost:rgba(232,39,28,.12);
+
+  /* ---- type ---- */
+  --ui-10:10px;
+  --ui-14:14px;
+  --track:-0.02em;
+  --track-ui:0.08em;     /* microtype is tracked OPEN, display is tracked TIGHT */
+
+  /* ---- motion ---- */
+  --ease-out:cubic-bezier(.22,.61,.36,1);
+  --ease-hard:cubic-bezier(.625,.05,0,1);
+
+  /* ---- WHICH BUILD IS LAID OUT ----------------------------------------
+     Read by the pre-paint switch in index.html and by js/boot.js. CSS owns
+     this because CSS is the only one of the three that CANNOT be told: a
+     media query cannot take a custom property, so the breakpoint literal
+     has to live in css/mobile.css no matter what. Everything else asks.
+
+     Before this, the number 760 appeared in three independent places — the
+     inline switch, boot.js's resize watcher and mobile.css's query — and
+     the two builds are different RUNTIMES. Letting those drift gives you
+     the desktop layout over the mobile runtime, which renders a page with
+     no subject in it and looks exactly like a stale build. */
+  --build:desktop;
+
+  /* ---- chrome ---- */
+  --inset:22px;
+  --bar-h:28px;
+
+  /* ---- THE ZONES THE CHROME OWNS -------------------------------------
+     .hud is position:fixed, inset:0, z-index:30 — a full-screen sheet
+     ABOVE the panes. Its readouts are placed in viewport coordinates and
+     know nothing whatever about the content underneath them, so every
+     overprint on this site is the same bug: content wandering into a
+     corner the HUD had already claimed.
+
+     Measured, at 1900x900, from the live DOM:
+       map          x 22..209   y 22..215
+       readout      x 1668..1878  y 22..114
+       log stack    x 22..362   y 761..846   (grows upward as lines land)
+       scroll       x 1578..1878  y 815..846
+       vertical rail x 22..37    y centred, 125 tall
+
+     These four numbers name those zones once so no pane has to re-derive
+     them. The old code tuned each element in vh against a HUD measured in
+     px, which is why the clearances ranged from 91px at one window height
+     to MINUS 31px at another. */
+  --rail-w:15px;
+  --chrome-l:calc(var(--inset) + 30px);   /* left of this belongs to the rail */
+  --chrome-t:200px;                       /* map and readout */
+  --chrome-b:145px;                       /* log stack, scroll readout, bar */
+}
+
+*,*::before,*::after{ box-sizing:border-box; }
+html{ -webkit-text-size-adjust:100%; }
+
+body{
+  margin:0;
+  font-family:var(--font-main);
+  color:var(--c-ink);
+  background:var(--c-void);
+  -webkit-font-smoothing:antialiased;
+  /* The page owns the wheel gesture, so nothing here ever scrolls natively.
+     js/scroll.js is the only thing that moves anything. */
+  overflow:hidden;
+}
+
+img{ display:block; max-width:100%; }
+button{ font:inherit; color:inherit; background:none; border:0; padding:0;
+        cursor:pointer; }
+a{ color:inherit; text-decoration:none; }
+
+::selection{ background:var(--red); color:#fff; }
+
+/* ---- the microtype primitive ---------------------------------------------
+   Everything that is not display type is this. Uppercase, 10px, tracked open,
+   mono. Used by the HUD, the bar, the log, the pane indices. */
+.mono,.hud,.bar,.pane__idx,.pane__sub,.ftr__foot,.loader,.gate__foot{
+  font-family:var(--font-mono);
+  font-size:var(--ui-10);
+  line-height:1.5;
+  letter-spacing:var(--track-ui);
+  text-transform:uppercase;
+}
+
+.dim{ color:var(--c-label); }
+
+/* ---- the shared reveal ---------------------------------------------------
+   The reference's .anim-line, verbatim in shape: blur + fade, 42ms per index.
+   One class and a --i on the element is the entire staggering system. */
+.anim-line{
+  opacity:0;
+  filter:blur(var(--line-blur,7px));
+  animation:lineIn var(--line-ms,.52s) var(--ease-out) both;
+  animation-delay:calc(var(--i,0) * var(--line-step,42ms) + var(--group-delay,0ms));
+}
+@keyframes lineIn{
+  from{ opacity:0; filter:blur(var(--line-blur,7px)); }
+  60% { opacity:var(--in-opacity,1); }
+  to  { opacity:var(--in-opacity,1); filter:blur(0); }
+}
+
+/* ---- grain ---------------------------------------------------------------
+   Generated as an inline SVG turbulence rather than shipping a PNG — same
+   result, one less request, and the seed is tunable from here. On a dark
+   ground `overlay` at low opacity is the setting that bites; see the
+   reference's own note about contrast and brightness fighting each other. */
+.grain{
+  position:fixed; inset:0; z-index:900; pointer-events:none;
+  opacity:.16;
+  mix-blend-mode:overlay;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size:160px 160px;
+  animation:grain .85s steps(1) infinite;
+}
+@keyframes grain{
+  0%  { background-position:0 0; }
+  20% { background-position:-40px 20px; }
+  40% { background-position:30px -25px; }
+  60% { background-position:-25px -35px; }
+  80% { background-position:20px 40px; }
+}
+
+/* THE GRAIN HAS TO BE RETUNED FOR THE LIGHT GROUND, not merely dimmed.
+   `overlay` is a no-op against mid-grey and bites at both ends, which on a
+   near-white page turns the paper into sandpaper. `multiply` at a third of
+   the opacity gives the same tooth without the glare. */
+body.is-light .grain{ opacity:.055; mix-blend-mode:multiply; }
+
+@media (prefers-reduced-motion:reduce){
+  .anim-line{ animation-duration:1ms; animation-delay:0ms; }
+  .grain{ animation:none; }
+  /* Belt and braces with js/dormancy.js: the substrate stops drifting via
+     the uniform, and anything CSS-driven stops here. */
+  *,*::before,*::after{
+    animation-duration:.01ms !important; animation-iteration-count:1 !important;
+    transition-duration:.01ms !important;
+  }
+}
+
+/* ---- accessibility ------------------------------------------------------
+   FOCUS IS VISIBLE ON BOTH GROUNDS. A single outline colour cannot be, so
+   it is drawn with the accent, which is legible on the dark ground, the
+   light ground and the red footer alike. :focus-visible rather than :focus
+   so a mouse click does not leave a ring behind. */
+:focus-visible{
+  outline:2px solid var(--red);
+  outline-offset:3px;
+  border-radius:1px;
+}
+/* Never remove the indicator without replacing it — this is the fallback
+   for browsers with no :focus-visible support, where :focus must show. */
+:focus:not(:focus-visible){ outline:none; }
+
+.vh{
+  position:absolute !important; width:1px; height:1px;
+  margin:-1px; padding:0; overflow:hidden; white-space:nowrap;
+  clip:rect(0 0 0 0); clip-path:inset(50%); border:0;
+}
+
+/* Off-screen until focused, then a real, visible control. */
+.skip{
+  position:fixed; left:10px; top:-60px; z-index:3000;
+  font-family:var(--font-mono); font-size:var(--ui-10);
+  letter-spacing:var(--track-ui); text-transform:uppercase;
+  background:var(--red); color:#fff; padding:9px 14px;
+  transition:top 140ms var(--ease-out);
+}
+.skip:focus{ top:10px; }
+#stage:focus{ outline:none; }

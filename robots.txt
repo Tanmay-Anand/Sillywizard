@@ -1,0 +1,9 @@
+# Everything is public and there is only one page.
+User-agent: *
+Allow: /
+
+# Exploration renders and the source photograph are not content.
+Disallow: /assets/options/
+Disallow: /assets/ref/
+
+Sitemap: https://sillywizard.space/sitemap.xml

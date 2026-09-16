@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>SILLYWIZARD</title>
+<meta name="description" content="SILLYWIZARD — Tanmay Anand. Backend and systems engineer: Java, Spring Boot, APIs, Docker, Linux, and a habit of asking why a system is shaped the way it is." />
+<meta name="color-scheme" content="dark light" />
+<meta name="theme-color" content="#070707" />
+<link rel="canonical" href="https://sillywizard.space/" />
+
+<link rel="icon" href="/assets/favicon-32.png" sizes="32x32" type="image/png" />
+<link rel="apple-touch-icon" href="/assets/favicon-180.png" />
+
+<!-- THE OG URLS ARE ABSOLUTE, AND THAT IS NOT A STYLE CHOICE. Slack,
+     iMessage, WhatsApp and every crawler fetch og:image from THEIR servers,
+     where a relative path resolves against nothing at all. A relative one
+     previews perfectly on your own machine and shows an empty grey box
+     everywhere it actually matters. Update the domain when it is decided. -->
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="SILLYWIZARD" />
+<meta property="og:title" content="SILLYWIZARD — Tanmay Anand" />
+<meta property="og:description" content="Backend and systems engineer. Most of what I build is invisible." />
+<meta property="og:url" content="https://sillywizard.space/" />
+<meta property="og:image" content="https://sillywizard.space/assets/og-image.jpg" />
+<meta property="og:image:type" content="image/jpeg" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="A point-cloud bust wearing a wizard hat, standing in the dark." />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="SILLYWIZARD — Tanmay Anand" />
+<meta name="twitter:description" content="Backend and systems engineer. Most of what I build is invisible." />
+<meta name="twitter:image" content="https://sillywizard.space/assets/og-image.jpg" />
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="css/base.css" />
+<link rel="stylesheet" href="css/site.css" />
+<!-- LAST, and that is the point: every rule in it overrides one above at
+     equal specificity, so load order is what makes the phone layout win. -->
+<link rel="stylesheet" href="css/mobile.css" />
+
+<!-- Decided before first paint, the way the reference does it: set this from
+     a module instead and the page flashes the layout the gate exists to hide. -->
+<script>
+(function(){
+  var d = document.documentElement;
+  /* WHICH BUILD, decided before the first paint. js/boot.js reads this to
+     choose what to mount, and css/mobile.css to choose what to lay out —
+     settle it from a module instead and the phone flashes the desktop
+     composition before collapsing it. ?desktop forces the full build on a
+     phone, which is how the desktop layout stays testable there. */
+  /* ASK THE STYLESHEET, do not re-derive. css/mobile.css sets --build to
+     "mobile" inside its own media query, and the three stylesheets above
+     are render-blocking, so the answer is already available here. The
+     fallback keeps the page usable if base.css ever fails to load. */
+  var narrow = (getComputedStyle(d).getPropertyValue('--build').trim() === 'mobile')
+            || (window.matchMedia && window.matchMedia('(max-width:760px)').matches);
+  var isMobile = narrow && !/[?&]desktop(&|=|$)/.test(location.search);
+  if (isMobile) d.className += ' is-mobile';
+  var reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion:reduce)').matches;
+  if (!isMobile && !reduced && !/[?&]skip(&|=|$)/.test(location.search)) d.className += ' is-loading';
+})();
+</script>
+</head>
+<body>
+
+<div class="grain" aria-hidden="true"></div>
+
+<!-- ================================ LOADER ============================== -->
+<div class="loader" data-loader aria-hidden="true">
+  <div class="loader__mark anim-line" style="--i:0">SILLYWIZARD</div>
+
+  <div class="loader__block loader__col1">
+    <p class="anim-line" style="--i:1">substrate</p>
+    <p class="anim-line" style="--i:2">cold</p>
+    <p class="anim-line" style="--i:3">***</p>
+  </div>
+
+  <div class="loader__block loader__col2">
+    <p class="anim-line" style="--i:4">allocating lattice</p>
+    <p class="anim-line" style="--i:5">seeding 40960 points</p>
+    <p class="anim-line" style="--i:6">deriving normals</p>
+    <p class="anim-line" style="--i:7">no colour data found</p>
+    <p class="anim-line" style="--i:8">proceeding anyway</p>
+    <p class="anim-line" style="--i:9">***</p>
+  </div>
+
+  <div class="loader__block loader__col3">
+    <p class="anim-line" style="--i:10">observer present</p>
+    <p class="anim-line" style="--i:11">substrate aware of observer</p>
+    <p class="anim-line" style="--i:12">this is expected</p>
+  </div>
+
+  <p class="loader__pct anim-line" style="--i:13" data-loader-pct>0</p>
+  <p class="loader__foot anim-line" style="--i:14">do not adjust the instruments</p>
+  <div class="loader__line" data-loader-line></div>
+  <div class="loader__flood"></div>
+</div>
+
+<a class="skip" href="#copy">Skip to content</a>
+
+<!-- Phone build only (css/mobile.css hides both above 760px). The bust is
+     the same construction as the desktop subject, rendered once at build
+     time by tools/make-og.py. -->
+<div class="m-read" aria-hidden="true">
+  <span>SUBSTRATE <span class="dim">//</span> <b data-m-phase>BUILD</b></span>
+  <span>GMT+5:30 <span data-m-time>00:00:00</span></span>
+</div>
+<!-- A DIV, NOT AN IMG, and the src lives in css/mobile.css.
+
+     As an <img> the desktop build downloaded all 54 KB of the phone's
+     backdrop and then set display:none on it — a hidden <img> is still
+     fetched. A background-image inside an unmatched media query is not
+     fetched at all, so this is the one way the file genuinely never leaves
+     the server for a desktop visitor. Decorative, so it carries no alt and
+     is hidden from assistive tech either way. -->
+<div class="m-bust" aria-hidden="true"></div>
+
+<main>
+  <!-- The page had no h1 at all: every heading was an h2 inside a phase.
+       One visually-hidden h1 gives the document a title in the outline
+       without putting a second piece of display type on the screen. -->
+  <h1 class="vh">SILLYWIZARD — Tanmay Anand, software engineer</h1>
+
+  <!-- The ground, then the subject on top of it. Order is load-bearing:
+       see js/tear.js. -->
+  <canvas id="tear" class="tear"></canvas>
+  <div class="sub"><canvas id="substrate"></canvas></div>
+
+  <!-- ========================== INSTRUMENT PANEL ======================== -->
+  <div class="hud" aria-hidden="true">
+
+    <div class="hud__map">
+      <div class="hud__mapbox">
+        <span class="hud__corner hud__corner--tl"></span>
+        <span class="hud__corner hud__corner--tr"></span>
+        <span class="hud__corner hud__corner--bl"></span>
+        <span class="hud__corner hud__corner--br"></span>
+        <canvas class="hud__mini" id="hudMini" width="150" height="150"></canvas>
+        <span class="hud__dot" data-hud-dot></span>
+      </div>
+    </div>
+
+    <div class="hud__read">
+      <div class="hud__row"><span>phase</span><b data-hud-phase>BUILD</b></div>
+      <div class="hud__row"><span>state</span><b data-hud-state>stable</b></div>
+      <div class="hud__row"><span>coherence</span><b data-hud-coh>1.000</b></div>
+      <div class="hud__rule"></div>
+      <div class="hud__row"><span>observer</span><b>present</b></div>
+      <div class="hud__row"><span>uptime</span><b data-hud-uptime>00:00:00</b></div>
+    </div>
+
+    <p class="hud__edge hud__edge--l">SUBSTRATE / SW-001</p>
+
+    <div class="hud__log" data-hud-log></div>
+
+    <div class="hud__prog">
+      <span class="hud__progn" data-hud-progn>000</span>
+      <div class="hud__progbar"><i data-hud-progbar></i></div>
+      <span class="hud__progn">100</span>
+    </div>
+  </div>
+
+  <!-- ============================= THE PHASES ===========================
+       FIVE COMPOSITIONS, NOT ONE TEMPLATE FIVE TIMES. The earlier build put
+       an identical index/title/body block on alternating sides, which is a
+       carousel: by the third screen the reader has learned the pattern and
+       stops looking. Each phase below is laid out by a different rule.
+       Copy marked .slot is placeholder pending real project detail.
+       =================================================================== -->
+  <div class="stage" id="stage" tabindex="-1">
+    <div class="track" id="track">
+
+      <!-- 01 · THE VOID ------------------------------------------------
+           Almost nothing. One statement, one cropped numeral, the subject.
+           It exists to set a silence the next four screens break. -->
+      <section class="pane pane--void" data-phase="0" id="copy" aria-label="Phase 01, Build">
+        <h2 class="void__say">Most of what<br />I build is<br />invisible.</h2>
+      </section>
+
+      <!-- 02 · THE ANNOTATION ------------------------------------------
+           This was a "river": 21 single lines alternating left and right,
+           one per row, reading top to bottom as one passage that parted
+           around the subject. It is now a technical drawing — six blocks in
+           the two gutters, each with a leader line to a real point on the
+           object. See js/annot.js.
+
+           data-anchor is MODEL SPACE, the same coordinates the geometry in
+           js/substrate.js is built in: roughly x +-0.35, y 0.10 to 1.42. -->
+      <section class="pane pane--river" data-phase="1" aria-label="Phase 02, Backend">
+
+        <p class="annot__head">BACKEND <span class="dim">//</span> MAKING SOMETHING HOLD</p>
+
+        <div class="annot annot--l" style="--at:26%" data-slice="11">
+          <p>Backend services<br />built around real systems.</p>
+        </div>
+        <div class="annot annot--l" style="--at:48%" data-slice="7">
+          <p>APIs.<br />Business logic.<br />Validation.<br />Data.<br />Integration.</p>
+        </div>
+        <div class="annot annot--l" style="--at:70%" data-slice="3">
+          <p>Working with constraints<br />is part of the job.</p>
+        </div>
+
+        <div class="annot annot--r" style="--at:24%" data-slice="12">
+          <p>Java.<br />Spring Boot.<br />REST APIs.</p>
+        </div>
+        <div class="annot annot--r" style="--at:50%" data-slice="6">
+          <p>Existing databases.<br />Existing architecture.<br />Existing rules.</p>
+        </div>
+        <div class="annot annot--r" style="--at:72%" data-slice="2">
+          <p>Designing around<br />what is already there.</p>
+        </div>
+
+        <p class="annot__foot"><span class="dim">//</span> controllers
+          <span class="dim">//</span> services <span class="dim">//</span> repositories
+          <span class="dim">//</span> dtos <span class="dim">//</span> configuration
+          <span class="dim">//</span> domain rules</p>
+
+        <!-- Drawn into by js/annot.js, one line and one endpoint dot per
+             block. Empty in the markup on purpose: if the module never
+             mounts there is nothing half-drawn left behind. -->
+        <svg class="annot__lines" data-annot-lines aria-hidden="true"></svg>
+      </section>
+
+      <!-- 03 · THE LEDGER ----------------------------------------------
+           A technical index, not prose. Numbered rows, hairline rules,
+           right-aligned status column. Reads as a schematic. -->
+      <section class="pane pane--ledger" data-phase="2" aria-label="Phase 03, Systems">
+
+        <!-- THE ORDER THE QUESTIONS GET ASKED IN, deliberately with no
+             worked example attached. A single case study dates, and invites
+             the reader to judge the case rather than the method.
+
+             Each one is a callout onto the colony, same mechanism as 02 —
+             see js/annot.js. Fixed model-space anchors here rather than
+             slabs, because this phase's geometry does not travel. -->
+        <!-- Four left, four right, flanking the subject the way 02 does — and
+             no index numbers. They were a column of red digits doing nothing
+             the order of the list was not already doing, and on a sequence
+             this short they read as a parts list rather than a train of
+             thought. -->
+        <div class="flow flow--l">
+          <p data-anchor="-0.05,1.30,0.06">What is actually the problem?</p>
+          <p data-anchor="-0.12,1.10,-0.04">What can't I change?</p>
+          <p data-anchor="-0.14,0.88,0.07">Where should the boundaries be?</p>
+          <p data-anchor="-0.09,0.66,0.02">Who owns each decision?</p>
+        </div>
+        <div class="flow flow--r">
+          <p data-anchor="0.11,1.18,-0.06">What should know about what?</p>
+          <p data-anchor="0.14,0.94,0.05">What happens when it fails?</p>
+          <p data-anchor="0.10,0.70,-0.08">How will I know it failed?</p>
+          <p data-anchor="0.06,0.44,0.04">And only then, build.</p>
+        </div>
+
+        <!-- Kept from the table that used to fill the right gutter: the
+             stack itself is gone, this is the claim that was underneath
+             it and is the only mention of security work on the site. -->
+        <p class="flow__foot">Self-directed labs in network and systems
+          security, built to understand how boundaries fail rather than to
+          collect certificates.</p>
+
+        <svg class="annot__lines" data-annot-lines aria-hidden="true"></svg>
+      </section>
+
+      <!-- 04 · THE WORD FIELD ------------------------------------------
+           Two vertical word columns flanking the subject, the ground
+           inverting underneath them. No sentences at all on this screen. -->
+      <section class="pane pane--field" data-phase="3" aria-label="Phase 04, Automation">
+        <div class="field__col field__col--l">
+          <p class="field__lbl">AUTOMATION<br />WHERE IT ACTUALLY HELPS.</p>
+          <p>DATA PROCESSING.</p><p>REPEATED TASKS.</p><p>SCHEDULED JOBS.</p>
+          <p>INTERNAL TOOLS.</p><p>AI-ASSISTED WORKFLOWS.</p>
+        </div>
+        <div class="field__mid">
+          <!-- The index says AUTOMATION and nothing else. It used to read
+               "AUTOMATION // WORK THAT RUNS WITHOUT ME" directly above type
+               four times its size saying the same words — the repeat weakened
+               both, and the big type is perfectly capable of carrying it. -->
+          <p class="field__idx">04 <span class="dim">//</span> AUTOMATION</p>
+          <p class="field__say">WORK THAT<br />RUNS WITHOUT<br />ME</p>
+          <p class="field__goal"><span class="dim">The goal is simple:</span><br />
+            remove work without hiding the system.</p>
+        </div>
+        <div class="field__col field__col--r">
+          <p>TRIGGERS.</p><p>QUEUES.</p><p>RETRIES.</p>
+          <p>LOGGING.</p><p>OBSERVABILITY.</p>
+        </div>
+        <p class="field__note field__note--a">WITHOUT SUPERVISION<br />
+          WITHOUT A PROMPT<br />WITHOUT ME<br /><br />
+          ON A SCHEDULE<br />ON A TRIGGER<br />REPEATEDLY</p>
+        <p class="field__note field__note--b">AI used where it removes work,
+          inside products never designed for it. Practical approaches to
+          complicated problems, not demos.</p>
+      </section>
+
+      <!-- 05 · DISPERSAL ------------------------------------------------
+           The composition comes apart with the material — but coming apart
+           still has to be COMPOSED. Positions are surveyed against the
+           chrome's dead zones (the map, the readout, the two vertical edge
+           labels, the log and the progress bar all own fixed real estate),
+           because "scattered" and "landing on top of the instruments" look
+           identical in a screenshot and only one of them is the design. -->
+      <section class="pane pane--dispersal" data-phase="4" aria-label="Phase 05, Experiments">
+
+        <!-- The anchor. Every other phase has one display-size element to
+             enter on; without it this screen was 10px type wall to wall and
+             the eye had nowhere to land first. -->
+        <div class="disp__anchor">
+          <p class="disp__idx">05 <span class="dim">//</span> EXPERIMENTS</p>
+          <h2 class="disp__title">Not everything<br />starts as a brief.</h2>
+          <p class="disp__sub">side projects <span class="dim">·</span> strange ideas
+            <span class="dim">·</span> tools <span class="dim">·</span> interactive builds</p>
+          <p class="disp__note">Some become products.<br />
+            Some become lessons.<br />
+            All of them teach me something.</p>
+        </div>
+
+        <!-- Moved from the right gutter, which the project cards now own.
+             It belongs beside the personal framing anyway. -->
+        <p class="frag frag--l1">Programming since 2020.<br />
+          Professionally for one year.<br />
+          The gap between those two numbers is where most of this lives.</p>
+
+        <p class="frag frag--vert">no structure recoverable</p>
+
+        <!-- Texture, not information — which is why it is mirrored and why
+             that costs nothing. The reference reverses whole clusters where
+             legibility was never the point; reversing a word someone is
+             meant to READ is just a gimmick. -->
+        <p class="frag frag--echo" aria-hidden="true">experiments</p>
+
+        <!-- THE THREE THAT CARRY THE SECTION, down the right gutter. No
+             paragraphs inside them on purpose: a card that explains itself
+             at length is doing the project's job badly. One line each. -->
+        <div class="disp__feat">
+          <article class="pcard">
+            <i>01</i><b>Praxis Chess</b>
+            <span>Interactive chess experience built from scratch.</span>
+            <s class="slot">view project // url needed</s>
+          </article>
+          <article class="pcard">
+            <i>02</i><b class="slot">project name</b>
+            <span>One line explaining what it does.</span>
+            <s class="slot">view project // url needed</s>
+          </article>
+          <article class="pcard">
+            <i>03</i><b class="slot">project name</b>
+            <span>One line explaining what was interesting.</span>
+            <s class="slot">view project // url needed</s>
+          </article>
+        </div>
+
+        <!-- Everything else, smaller, along the bottom band — the only strip
+             on this screen with no chrome in it. -->
+        <div class="disp__slots">
+          <article class="pslot"><i>04</i><b class="slot">project name</b></article>
+          <article class="pslot"><i>05</i><b class="slot">project name</b></article>
+          <article class="pslot"><i>06</i><b class="slot">project name</b></article>
+        </div>
+      </section>
+
+    </div>
+  </div>
+
+  <!-- =============================== FOOTER ============================= -->
+  <div class="ftr" id="ftr">
+    <h2 class="ftr__title"><span>OBSERVATION</span><span>CONCLUDED</span></h2>
+    <!-- A RECTANGLE, AND NOTHING ELSE INSIDE IT. It carried a filled
+         black band with a red lens ellipse cut through it; that was one
+         decorative object too many next to type this size, and the links
+         were competing with a shape instead of sitting in a frame. -->
+    <div class="ftr__band">
+      <nav class="ftr__nav" aria-label="Contact">
+        <a href="https://github.com/Tanmay-Anand" target="_blank" rel="noopener" data-scramble><span data-label>github</span> <i>+</i></a>
+        <a href="https://www.linkedin.com/in/tanmay-anand-8441931a0/" target="_blank" rel="noopener" data-scramble><span data-label>linkedin</span> <i>+</i></a>
+        <a href="mailto:tanmayanand2002@gmail.com" data-scramble><span data-label>email</span> <i>+</i></a>
+      </nav>
+    </div>
+    <div class="ftr__notes">
+      <p><i>1</i> I would rather understand<br />why a system is shaped<br />the way it is</p>
+      <p><i>2</i> than implement<br />the ticket that<br />assumes it</p>
+      <p><i>3</i> Both, ideally.<br />In that order.</p>
+    </div>
+    <p class="ftr__foot">TANMAY ANAND <span class="dim">//</span> SILLYWIZARD
+      <span class="dim">//</span> SUBSTRATE SW-001 <span class="dim">//</span> GMT+5:30</p>
+  </div>
+
+  <!-- ================================= BAR ============================== -->
+  <footer class="bar">
+    <div class="bar__left">
+      <button class="bar__btn" type="button" data-goto="0" data-scramble><span data-label>build</span> <i>+</i></button>
+      <button class="bar__btn" type="button" data-goto="1" data-scramble><span data-label>backend</span> <i>+</i></button>
+      <button class="bar__btn" type="button" data-goto="2" data-scramble><span data-label>systems</span> <i>+</i></button>
+      <button class="bar__btn" type="button" data-goto="3" data-scramble><span data-label>automation</span> <i>+</i></button>
+      <button class="bar__btn" type="button" data-goto="4" data-scramble><span data-label>experiments</span> <i>+</i></button>
+    </div>
+    <div class="bar__clock">
+      <span class="bar__zone">GMT+5:30</span>
+      <i class="bar__mark"></i>
+      <span class="bar__time" data-clock-time>00:00:00</span>
+    </div>
+    <button class="bar__mail" type="button" data-copy-email="tanmayanand2002@gmail.com">
+      <span data-label>copy address</span> <i>+</i>
+    </button>
+  </footer>
+
+</main>
+
+<!-- ONLY THE BUILD THAT IS ACTUALLY RUNNING.
+
+     js/boot.js has always said these are two RUNTIMES rather than two
+     stylesheets, and mounted accordingly — but the page still shipped both
+     of them to every visitor and then mounted one. A phone was downloading
+     and parsing 134 KB of renderer it would never construct: substrate.js
+     alone is 70 KB of point-cloud geometry and shader source, and parse
+     cost on a mid-range phone is paid whether or not a line of it runs.
+
+     Order still matters and none of these are modules, so they are inserted
+     with async=false, which keeps insertion order as execution order.
+     boot.js goes last and already copes with arriving after DOMContentLoaded.
+
+     KEEP hud.js ON BOTH. It registers 'chrome' as well as 'hud', and the
+     phone mounts 'chrome' for the bottom bar. Dropping it here because the
+     name looks desktop-only takes the bar and the clock with it. -->
+<script>
+(function () {
+  var mobile = document.documentElement.classList.contains('is-mobile');
+  var list = ['lifecycle', 'isolate', 'dormancy', 'hud', 'a11y', 'fps']
+    .concat(mobile ? ['mobile']
+                   : ['tearfn', 'face', 'substrate', 'tear', 'scroll', 'annot', 'loader'])
+    .concat(['boot']);
+  for (var i = 0; i < list.length; i++) {
+    var s = document.createElement('script');
+    s.src = 'js/' + list[i] + '.js';
+    s.async = false;
+    document.head.appendChild(s);
+  }
+})();
+</script>
+</body>
+</html>

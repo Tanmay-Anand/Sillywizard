@@ -1,0 +1,585 @@
+/* ==========================================================================
+   site.css — the ground, the subject, the instruments, five compositions.
+
+   THE GROUND FLIPS. Phases 01–03 are dark, 04–05 light, the footer red.
+   js/scroll.js puts .is-light on <body> when the tear has passed halfway, so
+   the DOM text inverts with the paper the shader is painting. The flip is
+   timed to land while both neighbouring phases are near zero opacity, which
+   is why a hard switch is invisible and no per-pixel text masking is needed.
+   ========================================================================== */
+
+/* ---- ground-aware ink ----------------------------------------------------
+   Declared once, redefined once. Every rule below reads these rather than
+   the raw tokens, so a third ground state is one more block here instead of
+   a hunt through the file. */
+:root{
+  --ink:var(--c-ink);
+  --fog:var(--c-fog);
+  --slate:var(--c-slate);
+  --label:var(--c-label);
+  --line:var(--c-line);
+  /* The channel the subject occupies. Every composition keeps out of it,
+     which is what stops copy ever landing on the head. */
+  --chan:34vw;
+}
+body.is-light{
+  --ink:#111111;
+  --fog:#4a4a4a;
+  --slate:#6b6b6b;
+  --label:#8e8e8e;
+  --line:rgba(0,0,0,.14);
+}
+body,.stage,.hud{ transition:color 240ms linear; }
+
+/* ------------------------- GROUND AND SUBJECT ---------------------------- */
+.tear{ position:fixed; inset:0; z-index:0; pointer-events:none;
+       display:block; width:100%; height:100%; }
+.sub{ position:fixed; inset:0; z-index:1; pointer-events:none; }
+.sub canvas{ display:block; width:100%; height:100%; }
+
+/* =========================== INSTRUMENT PANEL ============================ */
+.hud{ position:fixed; inset:0; z-index:30; pointer-events:none; color:var(--slate); }
+
+.hud__map{ position:absolute; left:var(--inset); top:var(--inset); }
+.hud__mapbox{
+  position:relative; width:150px; height:150px;
+  border:1px solid var(--line);
+  background:rgba(128,128,128,.03);
+}
+.hud__mini{ display:block; width:100%; height:100%; opacity:.85; }
+/* The minimap is a copy of the main canvas's pixels, which are light points
+   on nothing — on the light ground they would be invisible. */
+body.is-light .hud__mini{ filter:invert(1); }
+
+/* Corners, not a border: a closed rule reads as a box, these read as a crop
+   mark, which is what the reference draws. */
+.hud__corner{ position:absolute; width:5px; height:5px; border:1px solid var(--fog); }
+.hud__corner--tl{ left:-1px;  top:-1px;    border-right:0; border-bottom:0; }
+.hud__corner--tr{ right:-1px; top:-1px;    border-left:0;  border-bottom:0; }
+.hud__corner--bl{ left:-1px;  bottom:-1px; border-right:0; border-top:0; }
+.hud__corner--br{ right:-1px; bottom:-1px; border-left:0;  border-top:0; }
+
+.hud__dot{
+  position:absolute; width:3px; height:3px; background:var(--red);
+  border-radius:50%; left:50%; top:50%; margin:-1.5px 0 0 -1.5px;
+}
+.hud__xy{ position:absolute; display:flex; gap:6px; color:var(--fog); }
+.hud__xy b{ font-weight:400; color:var(--label); }
+.hud__xy--x{ left:0;  bottom:-16px; }
+.hud__xy--y{ right:0; bottom:-16px; }
+
+
+.hud__read{ position:absolute; right:var(--inset); top:var(--inset); width:210px; }
+.hud__row{ display:flex; justify-content:space-between; gap:12px; }
+.hud__row span{ color:var(--label); }
+.hud__row b{ font-weight:400; color:var(--fog); }
+.hud__row b[data-hud-phase]{ color:var(--red); }
+/* The falling number, and the state it drags with it. */
+.hud__row b.is-low{ color:var(--red); }
+.hud__rule{ height:1px; background:var(--line); margin:8px 0; }
+
+.hud__edge{ position:absolute; top:50%; margin:0; color:var(--label); white-space:nowrap; }
+.hud__edge--l{ left:var(--inset);  transform:translateY(-50%) rotate(180deg);
+               writing-mode:vertical-rl; }
+.hud__edge--r{ right:var(--inset); transform:translateY(-50%);
+               writing-mode:vertical-rl; }
+
+.hud__log{
+  position:absolute; left:var(--inset); bottom:calc(var(--bar-h) + 26px);
+  width:340px; min-height:72px;
+}
+.hud__log p{ margin:0 0 2px; color:var(--label); }
+.hud__log p:last-child{ color:var(--fog); }
+.hud__log .hi{ color:var(--red); }
+
+.hud__prog{
+  position:absolute; right:var(--inset); bottom:calc(var(--bar-h) + 26px);
+  display:flex; align-items:center; gap:10px; width:300px; justify-content:flex-end;
+}
+.hud__prog::before{
+  content:'SCROLL'; position:absolute; left:0; top:-16px; color:var(--label);
+  letter-spacing:var(--track-ui);
+}
+.hud__progn{ color:var(--label); }
+.hud__progbar{ flex:1; height:1px; background:var(--line); position:relative; }
+.hud__progbar i{ position:absolute; left:0; top:0; height:100%; width:0;
+                 background:var(--red); display:block; }
+
+/* ================================ STAGE ================================== */
+.stage{ position:fixed; inset:0; z-index:20; pointer-events:none; }
+.track{ position:absolute; left:0; right:0; top:0; will-change:transform; }
+.pane{ position:relative; height:100vh; }
+
+/* ======================= 01 · THE VOID ===================================
+   Almost nothing on screen. The emptiness IS the composition, and it is
+   what gives the next four screens something to break. */
+.pane--void{ display:grid; align-content:center; }
+.void__say{
+  margin:0; padding-left:var(--inset);
+  max-width:min(42vw, 560px);
+  font-size:clamp(2.4rem,4.8vw,5rem); font-weight:500; line-height:.96;
+  letter-spacing:-0.045em; color:var(--ink);
+}
+
+/* ======================= 02 · THE RIVER ==================================
+   THE MOVE THAT REPLACED THE ALTERNATING BLOCKS. Each line is its own
+   three-track grid row — gutter, subject channel, gutter — and takes the
+   left or right track. Markup order stays linear, so it reads top to bottom
+   as one passage while parting visually around the subject. Blocks that
+   alternate sides are a carousel; this is a river. */
+/* ======================= 02 · THE ANNOTATION =============================
+   A technical drawing. Copy sits in the two gutters; js/annot.js runs a
+   leader line from each block to a point ON the subject, projected through
+   the same matrices the renderer just drew with.
+
+   ABSOLUTE, NOT FLOW. Each block is pinned at its own --at so the six of
+   them can be spread against the object's height rather than stacked. A
+   flow layout would let one long block shove the rest down and drag every
+   leader line with it. */
+.pane--river{ display:block; position:relative; }
+
+/* ABOVE THE BLOCKS AND BESIDE THE MAP. At top:var(--chrome-t) this sat at
+   200px, exactly where the first left-hand block began, and the two printed
+   through each other. The map owns y 22..215 on this side, so the header
+   goes to its right rather than under it. */
+.annot__head{
+  position:absolute; left:calc(var(--inset) + 210px); top:var(--inset);
+  margin:0; color:var(--label);
+  font-family:var(--font-mono); font-size:var(--ui-10);
+  letter-spacing:var(--track-ui); text-transform:uppercase;
+}
+.annot{
+  position:absolute; top:var(--at); max-width:19vw;
+  font-family:var(--font-mono); font-size:var(--ui-10);
+  letter-spacing:var(--track-ui); text-transform:uppercase;
+  color:var(--fog); line-height:1.85;
+}
+.annot p{ margin:0; }
+/* Both columns face the channel: the left block is right-aligned and the
+   right block left-aligned, so each one's near edge is the edge its leader
+   leaves from and the line never crosses its own text. */
+/* PINNED TO THE CHANNEL, NOT TO THE WINDOW. At the gutter edge the blocks
+   were a third of a screen away from the thing they point at, and the
+   leader spent that whole distance saying nothing. --chan is the corridor
+   the subject stands in, so 50% minus half of it is exactly the subject's
+   edge: each column now sits just outside the object it annotates and the
+   line is as short as the drawing allows. */
+.annot--l{ right:calc(50% + var(--chan) / 2 - 2vw); left:auto; text-align:right; }
+.annot--r{ left:calc(50% + var(--chan) / 2 - 2vw); right:auto; text-align:left; }
+
+.annot__foot{
+  position:absolute; left:var(--chrome-l);
+  bottom:calc(var(--chrome-b) + 8px);
+  margin:0; max-width:42vw; color:var(--label); line-height:1.9;
+  font-family:var(--font-mono); font-size:var(--ui-10);
+  letter-spacing:var(--track-ui); text-transform:uppercase;
+}
+
+/* The overlay the leaders are drawn into. Under the copy in z so a line can
+   never cross a letter, and inert to the pointer. */
+.annot__lines{
+  position:absolute; inset:0; width:100%; height:100%;
+  pointer-events:none; z-index:-1; overflow:visible;
+}
+.annot__line{ stroke:var(--line); stroke-width:1; }
+.annot__dot{ fill:var(--red); }
+
+/* ======================= 03 · THE LEDGER =================================
+   A technical index rather than prose: rules, columns, a right-aligned
+   status field. It should read as a schematic. */
+/* Centred inside the safe area rather than inside the window, so the table
+   cannot grow up into the map or down into the log stack. */
+.pane--ledger{ display:flex; align-items:center; justify-content:space-between;
+               padding:var(--chrome-t) 0 var(--chrome-b); }
+
+/* ---- THE FLOW ------------------------------------------------------------
+   Eight questions, four in each gutter, each one a callout onto the colony.
+   Same arrangement as 02 and for the same reason: a block of copy, a thin
+   line, a point on the thing itself.
+
+   NO NUMBERS. They were a column of red digits restating an order the list
+   already has, and over eight short lines that reads as a parts index
+   rather than a train of thought.
+
+   Pinned to the channel rather than the window, so the leaders are as short
+   as the drawing allows. */
+.flow{
+  position:absolute; top:22%; width:min(330px, 24vw);
+  font-family:var(--font-mono); font-size:var(--ui-10);
+  letter-spacing:var(--track-ui); text-transform:uppercase;
+  display:flex; flex-direction:column; gap:34px;
+}
+.flow--l{ right:calc(50% + var(--chan) / 2 - 2vw); text-align:right; }
+.flow--r{ left:calc(50% + var(--chan) / 2 - 2vw); text-align:left; }
+.flow p{ margin:0; color:var(--ink); font-size:12px; letter-spacing:.05em;
+         line-height:1.5; }
+/* The instruction the seven questions arrive at. */
+.flow--r p:last-child{ color:var(--red); }
+
+/* What survived the table: one paragraph, bottom left, under the flow. */
+.flow__foot{
+  position:absolute; left:calc(var(--inset) + 74px);
+  bottom:calc(var(--chrome-b) + 10px);
+  margin:0; max-width:44ch; color:var(--label); line-height:1.9;
+  font-family:var(--font-mono); font-size:var(--ui-10);
+  letter-spacing:var(--track-ui); text-transform:uppercase;
+}
+
+/* ======================= 04 · THE WORD FIELD =============================
+   No sentences at all. Two vertical word columns flanking the subject, with
+   the ground inverting underneath them. */
+/* THE HEADLINE OWNS THE BOTTOM OF THIS SCREEN, so the columns are centred
+   in what is left rather than in the window. Measured before the change,
+   the gap between the bottom of the left-hand vocabulary list and the top
+   of WORK THAT RUNS WITHOUT ME was 11px at a 916-tall window, 6px at 900
+   and MINUS 31px at 780 — which is why OBSERVABILITY was sliced in half on
+   an ordinary laptop and looked fine on the machine it was designed on.
+   --field-lead is the band the headline stands in. */
+/* Raised from 175: the mid block gained the goal statement under the
+   headline, and this band is what the flanking columns are centred above. */
+:root{ --field-lead:232px; }
+.pane--field{ display:flex; align-items:center; justify-content:space-between;
+              padding:var(--chrome-t) 0 calc(var(--chrome-b) + var(--field-lead)); }
+.field__col{
+  font-family:var(--font-mono); font-size:var(--ui-10);
+  letter-spacing:var(--track-ui); text-transform:uppercase;
+  color:var(--slate); line-height:2.15; width:220px;
+}
+.field__col p{ margin:0; }
+.field__col--l{ margin-left:var(--inset); text-align:right; }
+.field__col--r{ margin-right:var(--inset); text-align:left; }
+/* Clear of the bar AND of its own three lines: at 4rem this block is
+   ~200px tall, so anchoring it 15vh up put the last line under the bar. */
+/* Anchored to the chrome band in px, not to 19vh. A viewport unit here and
+   a pixel-positioned HUD there is the whole reason these drifted into each
+   other at some window sizes and not others. */
+.field__mid{ position:absolute; left:var(--chrome-l); bottom:var(--chrome-b);
+             max-width:42vw; }
+.field__idx{ margin:0 0 10px; color:var(--red);
+             font-family:var(--font-mono); font-size:var(--ui-10);
+             letter-spacing:var(--track-ui); text-transform:uppercase; }
+/* The label that opens the left column — it is a heading for the list under
+   it, so it gets the ink and the list stays quiet. */
+.field__lbl{
+  color:var(--ink); margin:0 0 14px; line-height:1.55;
+}
+.field__goal{
+  margin:20px 0 0; max-width:34ch;
+  font-family:var(--font-mono); font-size:12px; line-height:1.6;
+  letter-spacing:.05em; text-transform:uppercase; color:var(--ink);
+}
+.field__goal .dim{ color:var(--label); }
+.field__say{
+  margin:0; font-size:clamp(1.6rem,3.2vw,3.1rem); font-weight:500;
+  line-height:.94; letter-spacing:-0.04em; color:var(--ink);
+}
+.field__note{
+  position:absolute; margin:0; color:var(--label);
+  font-family:var(--font-mono); font-size:var(--ui-10);
+  letter-spacing:var(--track-ui); text-transform:uppercase; line-height:1.8;
+}
+.field__note--a{ right:var(--inset); bottom:calc(var(--chrome-b) + 96px);
+                 text-align:right; line-height:1.9; }
+/* Was 12vh, which is 94px at a 780-tall window and lands inside the
+   SCROLL readout's own band. */
+.field__note--b{ right:var(--inset); bottom:calc(var(--chrome-b) + 6px); }
+
+/* ======================= 05 · DISPERSAL ==================================
+   The composition comes apart with the material — but coming apart still
+   has to be COMPOSED.
+
+   THE COLUMNS CLEAR THE EDGE LABELS, and that is the whole reason for the
+   +46px. .hud__edge--l and --r are vertical strips pinned at var(--inset)
+   and centred on the viewport, so they own x 22..38px for a 120px band
+   right through the middle of the screen — exactly where a left- or
+   right-anchored fragment wants to sit. Anchoring these at var(--inset)
+   put body copy underneath a rotated label, twice.
+   ========================================================================= */
+.pane--dispersal{ display:block; }
+:root{ --disp-side:calc(var(--inset) + 46px); }
+
+.frag{
+  position:absolute; margin:0;
+  font-family:var(--font-mono); font-size:var(--ui-10);
+  letter-spacing:var(--track-ui); text-transform:uppercase;
+  color:var(--fog); line-height:1.9; max-width:34ch;
+}
+
+/* The anchor. Every other phase has one display-size element to enter on;
+   without it this screen was 10px type wall to wall and the eye had
+   nowhere to land first. */
+.disp__anchor{ position:absolute; left:var(--disp-side); top:23%; max-width:30vw; }
+.disp__idx{
+  margin:0 0 12px; color:var(--red);
+  font-family:var(--font-mono); font-size:var(--ui-10);
+  letter-spacing:var(--track-ui); text-transform:uppercase;
+}
+/* A SENTENCE, SO THE TRACKING GOES. The old title was the single word
+   UNPROVEN at .30em, letterspaced well past comfort so the word came apart
+   at the same rate the material did — the one place the type did the
+   concept rather than describing it. That trick only works on one word;
+   applied to a nine-word sentence it is unreadable. The sentence is the
+   better content, so the trick loses. */
+.disp__title{
+  margin:0; font-weight:500; line-height:.98; color:var(--ink);
+  font-size:clamp(1.5rem,2.9vw,2.9rem);
+  letter-spacing:-0.03em; max-width:16ch;
+}
+.disp__sub{
+  margin:18px 0 0; color:var(--slate);
+  font-family:var(--font-mono); font-size:var(--ui-10);
+  letter-spacing:var(--track-ui); text-transform:uppercase;
+}
+.disp__note{
+  margin:16px 0 0; color:var(--label);
+  font-family:var(--font-mono); font-size:var(--ui-10);
+  letter-spacing:var(--track-ui); text-transform:uppercase; line-height:1.9;
+}
+
+/* Left column, below the anchor and above the log (which owns the bottom
+   130px on this side). */
+/* Wider than the shared 34ch cap: the authored <br> breaks are the drawing,
+   and at 34ch the browser re-wrapped inside them into five ragged lines. */
+.frag--l1{ left:var(--disp-side); top:66%; max-width:42ch; }
+
+/* Vertical, set at the left edge of the cloud rather than at the window
+   edge — writing-mode instead of a rotate() so the box is measured upright
+   and cannot overlap what is beside it. */
+/* DROPPED BELOW THE HEADING. At top:19% this ran from y 171 to 337 and the
+   new two-line sentence occupies 234 to 319 — the label printed straight
+   through it. The old title was one short word that never reached this far
+   right; a sentence does. Moving it down rather than right keeps it on the
+   cloud's leading edge, which is the only reason it is here. */
+.frag--vert{
+  left:25.5%; top:42%; writing-mode:vertical-rl;
+  color:var(--slate); max-width:none;
+}
+
+/* THE THREE THAT CARRY THE SECTION. The right gutter used to hold two
+   fragments of copy; they moved to the left, under the personal framing
+   they belong with, and the whole column is now the projects.
+
+   Top at 23% clears .hud__read, which reaches about 21% of the viewport,
+   and the stack ends well above .hud__prog. */
+.disp__feat{
+  position:absolute; right:var(--disp-side); top:23%;
+  width:min(300px, 26vw); display:flex; flex-direction:column; gap:14px;
+}
+.pcard{
+  border:1px solid var(--line); padding:12px 14px;
+  font-family:var(--font-mono); font-size:var(--ui-10);
+  letter-spacing:var(--track-ui); text-transform:uppercase; line-height:1.7;
+  /* THE ONE PLACE ON THE PAGE A VISITOR CAN CLICK INSIDE A PHASE.
+     .stage is pointer-events:none so the wheel gesture reaches the window —
+     without this the cards are decoration you cannot touch. Re-enabled on
+     the card only, and only while its phase is the live one: a link in a
+     pane faded to zero is still clickable, and an invisible link that
+     swallows a click is worse than no link. */
+  pointer-events:none;
+}
+.pane.is-live .pcard{ pointer-events:auto; }
+.pcard i{ display:block; font-style:normal; color:var(--red); }
+.pcard b{ display:block; font-weight:400; color:var(--ink); margin-top:5px;
+          font-size:12px; letter-spacing:.06em; }
+.pcard span{ display:block; color:var(--label); margin-top:5px; }
+.pcard s{ display:inline-block; text-decoration:none; margin-top:9px; }
+.pcard:hover{ border-color:var(--red-ghost); }
+
+/* Texture, not information. Mirrored, tiny, half-faded, sitting on the
+   cloud edge — a ghost of the word, not a second copy of it. */
+.frag--echo{
+  right:25%; bottom:23%; transform:scaleX(-1);
+  color:var(--label); opacity:.55; font-size:9px; letter-spacing:.55em;
+}
+
+/* Centred along the bottom: the only band on this screen with no chrome in
+   it, since the log stops at 23% and the progress bar starts at 80%. */
+/* Below the cloud, not inside it. At 15% the dashed box sat on the densest
+   part of DIFFUSE and read as debris rather than as a marker. */
+/* Three project bays along the bottom — the only band on this screen with
+   no chrome in it, since the log stops at 23% and the progress bar starts
+   at 80%. Sized as the real entries will be so the composition can be
+   judged now rather than after the copy lands. */
+/* Everything beyond the three. Deliberately half the weight of a .pcard —
+   these are an index, not a shelf. */
+.disp__slots{
+  position:absolute; left:50%; transform:translateX(-50%); bottom:7%;
+  display:grid; grid-template-columns:repeat(3, minmax(120px, 165px)); gap:14px;
+}
+.pslot{
+  border:1px dashed var(--red-ghost); padding:8px 10px;
+  font-family:var(--font-mono); font-size:var(--ui-10);
+  letter-spacing:var(--track-ui); text-transform:uppercase; line-height:1.7;
+}
+.pslot i{ display:block; font-style:normal; color:var(--red); margin-bottom:6px; }
+.pslot b{ display:block; font-weight:400; color:var(--ink); }
+.pslot span{ display:block; color:var(--label); margin-top:4px; }
+
+/* Placeholder copy is marked in the DESIGN, not just the source, so an
+   unfilled slot cannot ship by accident. */
+.slot{
+  color:var(--red-dim) !important;
+  border:1px dashed var(--red-ghost); padding:6px 9px;
+}
+.river p.slot{ padding:8px 10px; margin-top:12px; margin-bottom:12px; }
+
+/* =============================== FOOTER ==================================
+   The flood. Red ground over everything, the subject included. */
+.ftr{
+  position:fixed; inset:0; z-index:40; pointer-events:none;
+  /* NO BACKGROUND. The red ground is painted by js/tear.js on the same
+     quad and the same torn boundary as the light one, so this element
+     carries only its type. Give it back a solid fill and the ending stops
+     being a tear and becomes a panel sliding over one. */
+  background:transparent; color:#0a0a0a;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  gap:26px; opacity:0; visibility:hidden;
+  /* UNCOVERED BY THE RED, not faded in over it — and along the red's own
+     torn edge rather than along a straight line drawn somewhere near it.
+     js/scroll.js writes a clip-path polygon every frame from the same noise
+     the tear shader thresholds, so the type is revealed exactly where the
+     ground has reached and nowhere else: no lead, no lag, one event.
+
+     Nothing is declared here on purpose. A mask-image and a clip-path doing
+     the same job ends with one of them silently winning, and the losing one
+     is the one you spend the afternoon editing.
+
+     `visibility` still gates it, so a footer clipped away to nothing cannot
+     take the pointer. */
+}
+/* Two separate states, because they are two separate questions: `is-up`
+   means the footer is on screen at all (so it may paint), `is-in` means it
+   is far enough along to take the pointer. Matching on the inline style
+   attribute worked but tied the CSS to the exact string js/scroll.js
+   happens to write. */
+.ftr.is-up{ visibility:visible; }
+.ftr.is-in{ pointer-events:auto; }
+.ftr__title{
+  margin:0; display:flex; flex-direction:column; align-items:center;
+  font-size:clamp(2.6rem,8vw,8.5rem); font-weight:700; line-height:.84;
+  letter-spacing:-0.05em;
+}
+.ftr__band{
+  position:relative; width:min(1100px,86vw); height:112px;
+  background:transparent;
+  border:3px solid #0a0a0a;        /* the frame IS the graphic */
+}
+/* Centred in the frame, both axes. Black on the red ground: the band no
+   longer supplies a dark backing, so the type has to carry the contrast
+   itself — which it does, and with one less object doing it. */
+.ftr__nav{
+  position:absolute; inset:0; z-index:2;
+  display:flex; align-items:center; justify-content:center;
+  gap:clamp(22px, 5vw, 64px);
+}
+.ftr__nav a{ color:#0a0a0a; font-size:13px; letter-spacing:.16em; }
+.ftr__nav a i{ color:#0a0a0a; }
+.ftr__nav a:hover,.ftr__nav a:hover i{ color:#fff; }
+
+.ftr__notes{
+  display:flex; gap:64px;
+  font-family:var(--font-mono); font-size:var(--ui-10);
+  letter-spacing:var(--track-ui); text-transform:uppercase; line-height:1.85;
+}
+.ftr__notes p{ margin:0; position:relative; padding-left:20px; }
+.ftr__notes i{ position:absolute; left:0; font-style:normal; }
+.ftr__foot{ margin:0; font-family:var(--font-mono); font-size:var(--ui-10);
+            letter-spacing:var(--track-ui); text-transform:uppercase; }
+.ftr .dim{ opacity:.45; color:inherit; }
+
+/* ================================= BAR =================================== */
+.bar{
+  position:fixed; left:0; right:0; bottom:0; height:var(--bar-h); z-index:60;
+  display:flex; align-items:center; justify-content:space-between; padding:0 12px;
+  background:rgba(12,12,11,.72);
+  backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
+  border-top:1px solid var(--line);
+  transition:transform 420ms var(--ease-out), background 240ms linear;
+}
+body.is-light .bar{ background:rgba(240,240,236,.80); }
+.bar.is-out{ transform:translateY(100%); }
+.bar__left{ display:flex; gap:18px; }
+/* TYPOGRAPHY ONLY — NO COLOUR. This rule used to set color:var(--fog),
+   and it sits AFTER the .ftr__nav a rule above that sets #0a0a0a, at equal
+   specificity. So the footer's links quietly inherited the BAR's grey and
+   rendered at rgb(175,175,175) on the red ground: a measured 2.02:1, at
+   10px, on the only three contact links the site has. The bar stands on
+   near-black and the footer stands on red; one colour cannot serve both,
+   so neither takes it from here. */
+.ftr__nav a,.bar__btn,.bar__mail{
+  font-family:var(--font-mono); font-size:var(--ui-10);
+  letter-spacing:var(--track-ui); text-transform:uppercase;
+  display:inline-flex; align-items:center; gap:5px;
+  transition:color .18s;
+}
+.bar__btn,.bar__mail{ color:var(--fog); }
+/* 5.3:1 on --red, against the 4.5:1 floor. */
+.ftr__nav a,.ftr__nav a i{ color:#000; }
+.bar__btn i,.bar__mail i{ font-style:normal; color:var(--label); }
+.bar__btn:hover,.bar__mail:hover,
+.bar__btn:hover i,.bar__mail:hover i{ color:var(--red); }
+.bar__btn.is-on,.bar__btn.is-on i{ color:var(--red); }
+.bar__clock{
+  display:flex; align-items:center; gap:8px;
+  font-family:var(--font-mono); font-size:var(--ui-10);
+  letter-spacing:var(--track-ui); color:var(--fog);
+}
+.bar__zone{ color:var(--label); }
+.bar__mark{ width:4px; height:4px; background:var(--red); border-radius:50%; }
+
+/* ================================ LOADER =================================
+   Corner-anchored blocks, not a centred stack — the reference's own layout
+   logic, with its red for the flood. */
+.loader{ display:none; }
+html.is-loading .loader{
+  display:block; position:fixed; inset:0; z-index:1500;
+  background:var(--c-void); color:var(--c-ink);
+}
+html.is-loading main{ opacity:0; }
+
+.loader__mark{
+  position:absolute; left:var(--inset); top:var(--inset);
+  font-family:var(--font-mono); font-size:var(--ui-10);
+  letter-spacing:.24em; color:var(--red);
+}
+.loader__block{ position:absolute; }
+.loader__block p{ margin:0 0 3px; }
+.loader__col1{ left:var(--inset); top:120px; color:var(--c-fog); }
+.loader__col2{ left:26%; top:120px; color:var(--c-slate); }
+.loader__col3{ right:var(--inset); top:120px; text-align:right; color:var(--c-slate); }
+
+.loader__pct{
+  position:absolute; left:var(--inset); bottom:56px;
+  font-family:var(--font-main); font-size:clamp(3rem,8vw,8rem);
+  font-weight:500; letter-spacing:-.05em; line-height:1; color:var(--c-ink);
+}
+.loader__foot{ position:absolute; right:var(--inset); bottom:60px; margin:0;
+               color:var(--c-label); }
+.loader__line{ position:absolute; left:0; bottom:0; height:3px; width:0;
+               background:var(--red); }
+.loader__flood{ position:absolute; left:0; bottom:0; width:100%; height:0;
+                background:var(--red); }
+
+.loader.is-out .anim-line{
+  animation:lineOut .42s var(--ease-hard) both;
+  animation-delay:calc(var(--i,0) * 18ms);
+}
+@keyframes lineOut{
+  to{ opacity:0; filter:blur(6px); transform:translateX(38px); }
+}
+
+
+/* ============================ INSTRUMENTS ================================
+   js/fps.js only. Never present without ?fps in the URL, so this costs a
+   visitor nothing and does not need to be pretty — it needs to be legible
+   over both grounds, which is why it carries its own colours rather than
+   the ground-aware tokens. */
+.fpsbox{
+  position:fixed; left:50%; top:8px; transform:translateX(-50%); z-index:2000;
+  font-family:var(--font-mono); font-size:10px; line-height:1.55;
+  letter-spacing:.06em; text-transform:uppercase; text-align:center;
+  color:#9dff9d; background:rgba(0,0,0,.82); border:1px solid #2c4a2c;
+  padding:6px 12px; pointer-events:none; white-space:nowrap;
+}
+.fpsbox b{ font-weight:400; color:#dfffdf; font-size:13px; }
+.fpsbox i{ font-style:normal; color:#6ea96e; }
