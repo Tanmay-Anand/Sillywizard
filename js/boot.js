@@ -10,10 +10,11 @@
        they are applied here, once, instead of being checked per frame. */
     if (window.OFF.has('grain')) { var g = document.querySelector('.grain'); if (g) g.remove(); }
     if (window.OFF.has('copy'))  { var c = document.getElementById('stage'); if (c) c.style.display = 'none'; }
-    /* THE TWO BUILDS. Not a responsive stylesheet over one runtime — the
-       phone genuinely does not construct the WebGL contexts, the point
-       buffers or the scroll accumulator. See css/mobile.css. */
-    var MOBILE = ['mobile', 'chrome', 'a11y', 'fps'];
+    /* THE TWO BUILDS. Not a responsive stylesheet over one runtime. The
+       phone never constructs the scroll accumulator, and it only constructs
+       the renderer if js/mobile.js decides the phone can carry it - that
+       module loads and mounts the live scripts itself, after first paint. */
+    var MOBILE = ['mobile', 'chrome', 'a11y', 'fps', 'reveal', 'mpager'];
     var isMobile = document.documentElement.classList.contains('is-mobile');
     window.PAGE.mount(document, isMobile ? MOBILE : null);
   }

@@ -1,0 +1,94 @@
+# CI/CD for SILLYWIZARD.
+#
+#   test     every push, every branch, and every pull request into main:
+#            the preflight (tools/check.py), then the unit and integration
+#            suites - the integration suite boots BOTH builds, desktop and
+#            phone, against the real index.html.
+#
+#   deploy   pushes to main only, and only after `test` has passed. Uses
+#            wrangler.jsonc (Cloudflare Workers, static assets). Skipped until
+#            the two repository secrets below exist, so the pipeline is safe
+#            to merge before Cloudflare is wired up. See DEPLOY.md.
+#
+#            Once this deploys, switch OFF Cloudflare's own Git auto-deploy -
+#            otherwise every push goes live twice, and the Cloudflare one does
+#            not wait for the tests.
+
+name: CI/CD
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+          cache: npm
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install
+        run: npm ci
+
+      - name: Preflight (tools/check.py)
+        run: python tools/check.py
+
+      - name: Unit tests
+        run: npx vitest run --project unit
+
+      - name: Integration tests (desktop and phone builds)
+        run: npx vitest run --project integration
+
+      - name: Coverage
+        if: ${{ !cancelled() }}
+        run: npx vitest run --coverage --coverage.reporter=text-summary --coverage.reporter=html
+
+      - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: coverage
+          path: coverage/
+          retention-days: 14
+
+  deploy:
+    name: Deploy to Cloudflare
+    needs: test
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      HAS_CLOUDFLARE: ${{ secrets.CLOUDFLARE_API_TOKEN != '' && secrets.CLOUDFLARE_ACCOUNT_ID != '' }}
+    steps:
+      - name: Cloudflare not configured
+        if: env.HAS_CLOUDFLARE != 'true'
+        run: echo "::notice::CLOUDFLARE_API_TOKEN / CLOUDFLARE_ACCOUNT_ID are not set - deploy skipped. See DEPLOY.md."
+
+      - uses: actions/checkout@v4
+        if: env.HAS_CLOUDFLARE == 'true'
+
+      - name: Deploy (wrangler.jsonc)
+        if: env.HAS_CLOUDFLARE == 'true'
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: deploy

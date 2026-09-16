@@ -5,6 +5,8 @@ Personal site. Static — no framework, no bundler, no build step. Open
 
 ```bash
 python serve.py        # http://localhost:5599, no-store on everything
+npm install            # once: test tooling only - the site has no dependencies
+npm test               # unit + integration suites (Vitest)
 python tools/check.py  # preflight: run this before every deploy
 python tools/make-og.py # regenerate share card, favicons, phone artwork
 ```
@@ -20,14 +22,14 @@ a responsive stylesheet.**
 
 | | desktop | phone |
 |---|---|---|
-| scrolling | virtual (`js/scroll.js` owns the wheel; `body` never scrolls) | native |
-| subject | two WebGL point clouds, 110k points, per-frame | one static WebP |
-| ground flip | fragment shader (`js/tear.js`) | CSS + a generated SVG edge |
-| scripts loaded | 12 | 8 |
-| first load | ~2.3 MB (2 MB of it `face.jpg`) | ~160 KB |
+| scrolling | virtual (`js/scroll.js` owns the wheel; `body` never scrolls) | one chapter per gesture (`js/mpager.js`: a 1-second move, input locked while it runs); `js/mstage.js` reads the position |
+| subject | two WebGL point clouds, 110k points, per-frame | the same renderer on a phone budget (30k points, no hover layers), loaded **after** first paint; a static WebP if the phone declines or cannot keep up |
+| ground flip | fragment shader (`js/tear.js`), timed by scroll | the same shader, **placed** on the tops of AUTOMATION and the footer |
+| scripts up front | 15 | 11 (+4 if the phone goes live) |
 
-The phone genuinely never constructs the GL contexts, the point buffers or the
-scroll accumulator. Crossing the breakpoint therefore **reloads the page** —
+The phone never constructs the scroll accumulator, and only constructs the
+renderer if `js/mobile.js` decides it can carry it (rules in
+`js/phonemath.js`). Crossing the breakpoint therefore **reloads the page** —
 the two cannot be swapped in place, because the phone build has already handed
 scrolling to the browser and the desktop build needs that back.
 
@@ -44,7 +46,10 @@ css/site.css      desktop: ground, subject, HUD, five compositions.
 css/mobile.css    the phone build. LOADED LAST — load order is what makes it
                   win, at equal specificity.
 js/               one concern per file, see below.
-tools/            Python generators. Nothing at runtime reads them.
+tools/            Python generators, and check.py (the preflight CI runs).
+tests/            Vitest: unit/ (one script at a time), integration/ (the real
+                  index.html with each build booted on it). See below.
+.github/          CI/CD: test every push, deploy main after tests pass.
 assets/           generated. Do not hand-edit.
 assets/ref/       source artwork (a cartoon face) for the hover portrait.
 ```
@@ -106,6 +111,46 @@ Built in, on the live site:
 | `?face` | hold the hover reveal open full-frame, for tuning the portrait |
 | `?skip` | skip the loader |
 | `?desktop` | force the desktop build on a phone |
+| `?live` / `?static` | force the phone's live renderer, or its static poster |
+| `?n=20000` | the phone renderer's point count, for tuning on a real phone |
+
+## Tests and CI
+
+Test-driven, Vitest only, no browser automation.
+
+```bash
+npm test                 # everything
+npm run test:unit        # tests/unit - one shipped script at a time
+npm run test:integration # tests/integration - both builds booted on index.html
+npm run test:watch       # the TDD loop
+npm run test:coverage    # coverage/index.html
+```
+
+**Tests load the shipped files, not copies.** `tests/helpers/site.mjs` runs
+`js/*.js` as named classic scripts in jsdom - the same global scope a `<script>`
+tag gets - so what is tested is what the browser runs, and coverage maps to the
+real files.
+
+**Desktop or phone?** Both, split by what they share:
+
+| suite | runs for | covers |
+|---|---|---|
+| `integration/markup` | both (one `index.html`) | structure, headings, nav, contact links, anchors, routes, projects, file references |
+| `integration/build-switch` | both | which build a screen width gets, and the script list each loads |
+| `integration/desktop` | desktop | virtual scroll, phase fade, ground flip, keyboard access, hover reveal |
+| `integration/mobile` | phone | capability gate, loading after first paint, fallback to static, the stage driver, frame-rate probe, tap reveal |
+| `integration/paging` | phone | one gesture = one page, the 1-second move, input lock, boundaries, touch / wheel / keys, project row and panel left alone |
+| `integration/deploy` | the deploy | nothing but the site is published (`.assetsignore`) |
+
+**What jsdom cannot tell you**, so it is not pretended: whether anything
+*looks* right, and real-device performance. Rendering (WebGL shaders, the
+point cloud, CSS layout) is uncovered by design. Check those by eye, on a real
+phone, with `?fps`.
+
+**When it runs.** `.husky/pre-push` runs the suite and the preflight before
+anything leaves your machine. `.github/workflows/ci.yml` runs them on every
+push and pull request, and deploys `main` to Cloudflare once they pass - see
+[DEPLOY.md](DEPLOY.md) for the two secrets that switch deploying on.
 
 ## Conventions
 
@@ -120,7 +165,7 @@ Built in, on the live site:
 
 ## What is deliberately not here
 
-No bundler, no TypeScript, no test framework, no CI matrix. The site is four
-files and some geometry; the cost of that machinery would exceed the cost of
-the bugs it prevents. `tools/check.py` is the whole of the automated safety
-net, and every check in it exists because that mistake was actually made here.
+No bundler, no TypeScript, no browser automation, no CI matrix. The site
+still ships with zero dependencies - `package.json` exists for the test
+tooling only and nothing in it reaches a visitor. `tools/check.py` catches the
+mistakes that were actually made here; the Vitest suites pin down behaviour.

@@ -216,3 +216,34 @@ git add -A && git commit -m "what changed" && git push
 
 Every host above rebuilds on push. Rollback is one click in their dashboard —
 no need to revert the commit first.
+
+## 7 · CI/CD: deploy only after the tests pass
+
+`.github/workflows/ci.yml` runs on every push and pull request:
+
+1. **test** — `tools/check.py`, then the unit and integration suites (both
+   builds). A red test stops everything after it.
+2. **deploy** — `main` only, and only if **test** passed: `wrangler deploy`
+   using `wrangler.jsonc`.
+
+The deploy job does nothing until you give it credentials, so it is safe to
+push before Cloudflare is set up. To switch it on:
+
+1. Cloudflare dashboard → **My Profile → API Tokens → Create Token** → use the
+   **Edit Cloudflare Workers** template. Copy the token.
+2. Cloudflare dashboard → **Workers & Pages** → copy your **Account ID** from
+   the right-hand sidebar.
+3. GitHub → the repo → **Settings → Secrets and variables → Actions → New
+   repository secret**, twice:
+   - `CLOUDFLARE_API_TOKEN` = the token
+   - `CLOUDFLARE_ACCOUNT_ID` = the account ID
+4. **Turn off Cloudflare's own Git deploys** for the project (Settings →
+   Builds → disconnect, or disable automatic deployments). Otherwise every push
+   deploys twice, and Cloudflare's copy does not wait for the tests.
+5. Recommended: GitHub → **Settings → Branches → Add rule** for `main` →
+   *Require status checks to pass* → select **Test**. Then nothing untested can
+   be merged into `main` at all.
+
+`.assetsignore` keeps the test suite, `package.json` and `node_modules` off the
+public site — `tests/integration/deploy.test.mjs` fails if something new would
+leak.

@@ -18,6 +18,16 @@
   --slate:var(--c-slate);
   --label:var(--c-label);
   --line:var(--c-line);
+  /* Leader lines are a drawn element pointing at something, not a rule
+     dividing space, so they get their own weight: at --line's 10% they were
+     close to invisible beside the copy they belong to. 40% sits between the
+     label grey and the text — clearly there, still behind the words. */
+  --leader:rgba(233,233,233,.40);
+  /* A route crosses the subject rather than stopping at it, and at the
+     leader's 40% it vanished over every dense node it passed through. */
+  --route:rgba(233,233,233,.68);
+  /* The ground itself, for marks that have to punch a hole in the ink. */
+  --ground:var(--c-void);
   /* The channel the subject occupies. Every composition keeps out of it,
      which is what stops copy ever landing on the head. */
   --chan:34vw;
@@ -28,6 +38,9 @@ body.is-light{
   --slate:#6b6b6b;
   --label:#8e8e8e;
   --line:rgba(0,0,0,.14);
+  --leader:rgba(0,0,0,.40);
+  --route:rgba(0,0,0,.66);
+  --ground:#f1f1ed;
 }
 body,.stage,.hud{ transition:color 240ms linear; }
 
@@ -35,6 +48,58 @@ body,.stage,.hud{ transition:color 240ms linear; }
 .tear{ position:fixed; inset:0; z-index:0; pointer-events:none;
        display:block; width:100%; height:100%; }
 .sub{ position:fixed; inset:0; z-index:1; pointer-events:none; }
+
+/* ---- BACKGROUND WORDS ------------------------------------------------------
+   Atmosphere, not headings. z-index 1 and EARLIER in the DOM than .sub, so
+   they paint above the paper and below the particles: the mesh genuinely
+   stands in front of them. Moved and faded per frame by js/scroll.js.
+
+   THEY ARE MEANT TO BE HARD TO SEE. Each alpha was set against its own
+   ground, not against a mockup: light at 3% and 2.8% on #070707 (03 is the
+   dimmer of the two because it is cut in pieces, and slices read brighter
+   than a whole word at the same alpha), dark at 2.6% on the paper. That one
+   started at 5% and read as grey lettering rather than texture: at 31vw the
+   strokes are wide enough that the eye averages out the paper grain and
+   sees the letter shape at a contrast it would ignore in thin type. Raise them and they start competing with the statement they
+   sit behind, which is the one thing they must never do.
+
+   Colours are literal rather than --ink: body.is-light flips mid-tear, and
+   a word that changed colour while it was still fading out would flash. */
+.bgw{ position:fixed; inset:0; z-index:1; pointer-events:none; overflow:hidden; }
+.bgw__word{
+  position:absolute; margin:0; white-space:nowrap;
+  font-family:var(--font-main); font-weight:700; line-height:.8;
+  letter-spacing:-0.06em; will-change:transform, opacity; opacity:0;
+}
+/* 02 - whole, quiet, wider than the window at both ends. */
+.bgw__word--backend{
+  left:-5vw; top:50%; margin-top:-8.8vw;
+  font-size:21.6vw; color:rgba(233,233,233,.03);
+}
+/* 03 - in pieces. Two fragments on different lines and sides, and each one
+   sliced across with the lower slice knocked sideways. The span keeps the
+   box (its own text is transparent); the two pseudo-elements are the
+   slices of that same text. */
+.bgw__word--systems{ inset:0; font-size:23.2vw; }
+.bgw__word--systems span{
+  position:absolute; color:transparent;
+}
+.bgw__word--systems span:first-child{ left:3vw;  top:6%; }
+.bgw__word--systems span:last-child { right:-7vw; top:47%; }
+.bgw__word--systems span::before,
+.bgw__word--systems span::after{
+  content:attr(data-t); position:absolute; left:0; top:0;
+  color:rgba(233,233,233,.028);
+}
+.bgw__word--systems span::before{ clip-path:inset(0 0 42% 0); }
+.bgw__word--systems span::after { clip-path:inset(58% 0 0 0); translate:-1.8vw 0; }
+.bgw__word--systems span:last-child::after{ translate:2.6vw 0; }
+/* 04 - too big for the screen. Right-aligned so it runs out past the right
+   edge and the bottom, away from the statement in the bottom-left corner. */
+.bgw__word--without{
+  right:-11vw; top:3vh; text-align:right; white-space:normal;
+  font-size:24.8vw; line-height:.78; color:rgba(10,10,10,.026);
+}
 .sub canvas{ display:block; width:100%; height:100%; }
 
 /* =========================== INSTRUMENT PANEL ============================ */
@@ -80,17 +145,15 @@ body.is-light .hud__mini{ filter:invert(1); }
 
 .hud__edge{ position:absolute; top:50%; margin:0; color:var(--label); white-space:nowrap; }
 .hud__edge--l{ left:var(--inset);  transform:translateY(-50%) rotate(180deg);
+               /* The name, not a readout: a size up from the 10px telemetry
+                  and tracked wider, so it reads as a signature on the edge.
+                  Still inside the rail - 18px of line box, well short of
+                  --chrome-l, where the content starts. */
+               font-size:12px; letter-spacing:.3em;
                writing-mode:vertical-rl; }
 .hud__edge--r{ right:var(--inset); transform:translateY(-50%);
                writing-mode:vertical-rl; }
 
-.hud__log{
-  position:absolute; left:var(--inset); bottom:calc(var(--bar-h) + 26px);
-  width:340px; min-height:72px;
-}
-.hud__log p{ margin:0 0 2px; color:var(--label); }
-.hud__log p:last-child{ color:var(--fog); }
-.hud__log .hi{ color:var(--red); }
 
 .hud__prog{
   position:absolute; right:var(--inset); bottom:calc(var(--bar-h) + 26px);
@@ -110,69 +173,75 @@ body.is-light .hud__mini{ filter:invert(1); }
 .track{ position:absolute; left:0; right:0; top:0; will-change:transform; }
 .pane{ position:relative; height:100vh; }
 
+/* ================================ LEDE ====================================
+   ONE HIERARCHY FOR 02-05, so a visitor learns how to read the page once.
+
+     __idx    where you are            red, mono, telemetry size
+     __say    the claim                display face, the first thing read
+     __desc   what it means            display face, readable at a glance
+     __more   supporting detail        display face, a step quieter
+     __meta   what it is built with    mono, small, last
+
+   The body copy moved OFF the mono face. Uppercase monospace at 10px was
+   the site's voice for everything, and it removes the word shapes that make
+   small text readable at speed - fine for a readout, wrong for the one
+   sentence that explains what a section is about. Mono is kept for the two
+   jobs it is good at: labels and metadata. Where each block sits is decided
+   per section; this only decides how it reads. */
+.lede__idx{
+  margin:0 0 14px; color:var(--red);
+  font-family:var(--font-mono); font-size:var(--ui-10);
+  letter-spacing:var(--track-ui); text-transform:uppercase;
+}
+.lede__say{
+  margin:0; color:var(--ink); font-weight:500;
+  font-size:clamp(1.8rem, 3vw, 3.2rem); line-height:.96; letter-spacing:-0.04em;
+}
+.lede__desc{
+  margin:20px 0 0; max-width:30ch; color:var(--ink);
+  font-size:clamp(1.05rem, 1.3vw, 1.4rem); line-height:1.3;
+  font-weight:400; letter-spacing:-0.01em;
+}
+.lede__more{
+  margin:12px 0 0; max-width:40ch; color:var(--fog);
+  font-size:clamp(.95rem, 1vw, 1.08rem); line-height:1.45; font-weight:400;
+}
+.lede__more--ink{ color:var(--ink); }
+.lede__meta{
+  margin:18px 0 0; color:var(--slate);
+  font-family:var(--font-mono); font-size:11px;
+  letter-spacing:var(--track-ui); text-transform:uppercase;
+}
+.lede .dim{ color:var(--label); }
+/* Keeps a compound together without U+2011: Space Grotesk has no glyph for
+   the non-breaking hyphen, and the fallback drew it as a gap. */
+.nb{ white-space:nowrap; }
+
 /* ======================= 01 · THE VOID ===================================
    Almost nothing on screen. The emptiness IS the composition, and it is
    what gives the next four screens something to break. */
 .pane--void{ display:grid; align-content:center; }
 .void__say{
-  margin:0; padding-left:var(--inset);
+  /* --chrome-l, not --inset: the rail owns the first 52px, and at --inset
+     the "I" of "I build" sat on top of the vertical name. */
+  margin:0; padding-left:var(--chrome-l);
   max-width:min(42vw, 560px);
   font-size:clamp(2.4rem,4.8vw,5rem); font-weight:500; line-height:.96;
   letter-spacing:-0.045em; color:var(--ink);
 }
 
-/* ======================= 02 · THE RIVER ==================================
-   THE MOVE THAT REPLACED THE ALTERNATING BLOCKS. Each line is its own
-   three-track grid row — gutter, subject channel, gutter — and takes the
-   left or right track. Markup order stays linear, so it reads top to bottom
-   as one passage while parting visually around the subject. Blocks that
-   alternate sides are a carousel; this is a river. */
-/* ======================= 02 · THE ANNOTATION =============================
-   A technical drawing. Copy sits in the two gutters; js/annot.js runs a
-   leader line from each block to a point ON the subject, projected through
-   the same matrices the renderer just drew with.
+/* ======================= 02 · BACKEND ====================================
+   One statement beside the stack. Centred on the screen's height rather
+   than parked in a corner - 03 and 04 own the bottom-left and 05 the top,
+   and the page should not put every section's claim in the same place.
 
-   ABSOLUTE, NOT FLOW. Each block is pinned at its own --at so the six of
-   them can be spread against the object's height rather than stacked. A
-   flow layout would let one long block shove the rest down and drag every
-   leader line with it. */
+   The width stops short of the stack: the subject is sized from the window
+   HEIGHT, so at 1440x900 its widest plate starts about 530px in, and a
+   paragraph that ran under it would be read through the particles. */
 .pane--river{ display:block; position:relative; }
-
-/* ABOVE THE BLOCKS AND BESIDE THE MAP. At top:var(--chrome-t) this sat at
-   200px, exactly where the first left-hand block began, and the two printed
-   through each other. The map owns y 22..215 on this side, so the header
-   goes to its right rather than under it. */
-.annot__head{
-  position:absolute; left:calc(var(--inset) + 210px); top:var(--inset);
-  margin:0; color:var(--label);
-  font-family:var(--font-mono); font-size:var(--ui-10);
-  letter-spacing:var(--track-ui); text-transform:uppercase;
-}
-.annot{
-  position:absolute; top:var(--at); max-width:19vw;
-  font-family:var(--font-mono); font-size:var(--ui-10);
-  letter-spacing:var(--track-ui); text-transform:uppercase;
-  color:var(--fog); line-height:1.85;
-}
-.annot p{ margin:0; }
-/* Both columns face the channel: the left block is right-aligned and the
-   right block left-aligned, so each one's near edge is the edge its leader
-   leaves from and the line never crosses its own text. */
-/* PINNED TO THE CHANNEL, NOT TO THE WINDOW. At the gutter edge the blocks
-   were a third of a screen away from the thing they point at, and the
-   leader spent that whole distance saying nothing. --chan is the corridor
-   the subject stands in, so 50% minus half of it is exactly the subject's
-   edge: each column now sits just outside the object it annotates and the
-   line is as short as the drawing allows. */
-.annot--l{ right:calc(50% + var(--chan) / 2 - 2vw); left:auto; text-align:right; }
-.annot--r{ left:calc(50% + var(--chan) / 2 - 2vw); right:auto; text-align:left; }
-
-.annot__foot{
-  position:absolute; left:var(--chrome-l);
-  bottom:calc(var(--chrome-b) + 8px);
-  margin:0; max-width:42vw; color:var(--label); line-height:1.9;
-  font-family:var(--font-mono); font-size:var(--ui-10);
-  letter-spacing:var(--track-ui); text-transform:uppercase;
+.river__lede{
+  position:absolute; left:var(--chrome-l); top:50%; translate:0 -50%;
+  width:min(31vw, 500px);
 }
 
 /* The overlay the leaders are drawn into. Under the copy in z so a line can
@@ -181,8 +250,26 @@ body.is-light .hud__mini{ filter:invert(1); }
   position:absolute; inset:0; width:100%; height:100%;
   pointer-events:none; z-index:-1; overflow:visible;
 }
-.annot__line{ stroke:var(--line); stroke-width:1; }
+.annot__line{ stroke:var(--leader); stroke-width:1; }
 .annot__dot{ fill:var(--red); }
+/* The one leader that is not an observation. Still a hairline, but in the
+   colour of the statement it belongs to, so the eye can follow it from the
+   words to the last point of the structure without hunting. */
+.annot__line--end{ stroke:var(--red); stroke-opacity:.72; }
+/* Routes: the same hairline weight as a leader, with its corners rounded so
+   the bends read as one drawn path rather than joined segments. */
+.annot__route{ fill:none; stroke:var(--route); stroke-width:1;
+               stroke-linejoin:round; transition:stroke 200ms linear; }
+/* OPEN RINGS, FILLED WITH THE GROUND. A solid dot is invisible on a solid
+   node, which is exactly where these sit; a ring with the paper inside it
+   reads on dense ink and on bare paper alike. The origin is the one filled
+   mark, so every path visibly starts somewhere. */
+.annot__node{ fill:var(--ground); stroke:var(--ink); stroke-width:1;
+              transition:stroke 200ms linear, fill 200ms linear; }
+.annot__node--root{ fill:var(--ink); }
+.annot__route.is-on{ stroke:var(--red); }
+.annot__node.is-on{ stroke:var(--red); }
+.annot__node--root.is-on{ fill:var(--red); }
 
 /* ======================= 03 · THE LEDGER =================================
    A technical index rather than prose: rules, columns, a right-aligned
@@ -191,6 +278,15 @@ body.is-light .hud__mini{ filter:invert(1); }
    cannot grow up into the map or down into the log stack. */
 .pane--ledger{ display:flex; align-items:center; justify-content:space-between;
                padding:var(--chrome-t) 0 var(--chrome-b); }
+/* ANCHORED TO THE BOTTOM, so it grows UPWARD into space the left-hand
+   questions have left for it (they stop at 47%) instead of downward into
+   the log. Measured at 1280x720, the shortest window this is built for, it
+   still clears the last left question. */
+.ledger__lede{
+  position:absolute; left:var(--chrome-l); bottom:calc(var(--chrome-b) + 18px);
+  width:min(36vw, 560px);
+}
+.ledger__lede .lede__desc{ max-width:none; }
 
 /* ---- THE FLOW ------------------------------------------------------------
    Eight questions, four in each gutter, each one a callout onto the colony.
@@ -203,86 +299,81 @@ body.is-light .hud__mini{ filter:invert(1); }
 
    Pinned to the channel rather than the window, so the leaders are as short
    as the drawing allows. */
+/* SCATTERED ON PURPOSE, WITHIN LIMITS. An evenly gapped column on each side
+   made eight observations into a form with two columns. Each question now
+   carries its own height (--y, a share of the screen) and its own drift
+   toward or away from the subject (--dx), set in the markup beside the text
+   it moves. The columns still own the side and the alignment, so every line
+   keeps the edge that faces the subject and the page cannot scatter further
+   than the channel allows. */
 .flow{
-  position:absolute; top:22%; width:min(330px, 24vw);
+  position:absolute; top:0; bottom:0; width:min(330px, 24vw);
   font-family:var(--font-mono); font-size:var(--ui-10);
   letter-spacing:var(--track-ui); text-transform:uppercase;
-  display:flex; flex-direction:column; gap:34px;
 }
 .flow--l{ right:calc(50% + var(--chan) / 2 - 2vw); text-align:right; }
 .flow--r{ left:calc(50% + var(--chan) / 2 - 2vw); text-align:left; }
-.flow p{ margin:0; color:var(--ink); font-size:12px; letter-spacing:.05em;
-         line-height:1.5; }
-/* The instruction the seven questions arrive at. */
-.flow--r p:last-child{ color:var(--red); }
+.flow p, .flow__end{
+  position:absolute; top:var(--y); left:0; right:0; margin:0;
+  color:var(--ink); font-size:12px; letter-spacing:.05em; line-height:1.5;
+  translate:var(--dx, 0) -50%;
+}
+/* --dx is a plain rightward nudge, not "toward the subject": on the left
+   side positive moves a question closer, on the right it moves it away. */
 
-/* What survived the table: one paragraph, bottom left, under the flow. */
-.flow__foot{
-  position:absolute; left:calc(var(--inset) + 74px);
-  bottom:calc(var(--chrome-b) + 10px);
-  margin:0; max-width:44ch; color:var(--label); line-height:1.9;
+/* THE CONCLUSION. Same typeface as the questions, so it reads as the end of
+   the same sentence rather than a slogan; red, a size up and opened out, so
+   it reads as the end. Its leader is red as well (see .annot__line--end). */
+.flow__end{
+  left:calc(50% + var(--chan) / 2 - 2vw); right:auto; width:min(330px, 24vw);
+  font-family:var(--font-mono); text-transform:uppercase;
+  color:var(--red); font-size:13px; letter-spacing:.14em;
+}
+
+/* ======================= 04 · AUTOMATION =================================
+   The statement in the bottom-left corner, on the paper, and nothing else
+   on the screen but the structure and the word behind it.
+
+   Anchored to the chrome band in px, not to a viewport unit: a vh-based
+   block beside a pixel-positioned HUD is what made the old version collide
+   at some window sizes and not others. It grows upward from there. */
+.pane--field{ display:block; }
+
+/* THE OUTPUTS. Not cards: a hairline rule on the left, which is where the
+   route arrives, and three short lines. A box around each would make them
+   three portfolio tiles; a rule makes them terminals of the same diagram.
+
+   PLACED FROM THE GLOBE'S SIZE, NOT FROM THE WINDOW'S WIDTH. The subject is
+   scaled by the window HEIGHT, and measured at 1440x900 its nodes span 412
+   to 1029px - a half-width of 34.5% of the height either side of centre.
+   A percentage of the width put the callouts 37px off its edge on that
+   screen and would have put them inside it on a narrower one. 60px of air
+   past the edge, whatever the window. */
+.auto{ position:absolute; inset:0; pointer-events:none; }
+.auto__out{
+  position:absolute; top:var(--y); left:calc(50% + 34.5vh + 60px);
+  width:min(20vw, 280px);
+  padding:0 0 0 14px; border-left:1px solid var(--leader);
+  transition:border-color 200ms linear;
+}
+.pane.is-live .auto__out{ pointer-events:auto; }
+.auto__out:hover, .auto__out:focus-within{ border-left-color:var(--red); }
+.auto__out b{
+  display:block; font-weight:400; color:var(--ink);
+  font-family:var(--font-mono); font-size:13px;
+  letter-spacing:var(--track-ui); text-transform:uppercase;
+}
+.auto__out span{
+  display:block; margin-top:8px; color:var(--fog);
+  font-size:15px; line-height:1.35;
+}
+.auto__out s{
+  display:inline-block; margin-top:10px; text-decoration:none;
   font-family:var(--font-mono); font-size:var(--ui-10);
   letter-spacing:var(--track-ui); text-transform:uppercase;
 }
-
-/* ======================= 04 · THE WORD FIELD =============================
-   No sentences at all. Two vertical word columns flanking the subject, with
-   the ground inverting underneath them. */
-/* THE HEADLINE OWNS THE BOTTOM OF THIS SCREEN, so the columns are centred
-   in what is left rather than in the window. Measured before the change,
-   the gap between the bottom of the left-hand vocabulary list and the top
-   of WORK THAT RUNS WITHOUT ME was 11px at a 916-tall window, 6px at 900
-   and MINUS 31px at 780 — which is why OBSERVABILITY was sliced in half on
-   an ordinary laptop and looked fine on the machine it was designed on.
-   --field-lead is the band the headline stands in. */
-/* Raised from 175: the mid block gained the goal statement under the
-   headline, and this band is what the flanking columns are centred above. */
-:root{ --field-lead:232px; }
-.pane--field{ display:flex; align-items:center; justify-content:space-between;
-              padding:var(--chrome-t) 0 calc(var(--chrome-b) + var(--field-lead)); }
-.field__col{
-  font-family:var(--font-mono); font-size:var(--ui-10);
-  letter-spacing:var(--track-ui); text-transform:uppercase;
-  color:var(--slate); line-height:2.15; width:220px;
-}
-.field__col p{ margin:0; }
-.field__col--l{ margin-left:var(--inset); text-align:right; }
-.field__col--r{ margin-right:var(--inset); text-align:left; }
-/* Clear of the bar AND of its own three lines: at 4rem this block is
-   ~200px tall, so anchoring it 15vh up put the last line under the bar. */
-/* Anchored to the chrome band in px, not to 19vh. A viewport unit here and
-   a pixel-positioned HUD there is the whole reason these drifted into each
-   other at some window sizes and not others. */
-.field__mid{ position:absolute; left:var(--chrome-l); bottom:var(--chrome-b);
-             max-width:42vw; }
-.field__idx{ margin:0 0 10px; color:var(--red);
-             font-family:var(--font-mono); font-size:var(--ui-10);
-             letter-spacing:var(--track-ui); text-transform:uppercase; }
-/* The label that opens the left column — it is a heading for the list under
-   it, so it gets the ink and the list stays quiet. */
-.field__lbl{
-  color:var(--ink); margin:0 0 14px; line-height:1.55;
-}
-.field__goal{
-  margin:20px 0 0; max-width:34ch;
-  font-family:var(--font-mono); font-size:12px; line-height:1.6;
-  letter-spacing:.05em; text-transform:uppercase; color:var(--ink);
-}
-.field__goal .dim{ color:var(--label); }
-.field__say{
-  margin:0; font-size:clamp(1.6rem,3.2vw,3.1rem); font-weight:500;
-  line-height:.94; letter-spacing:-0.04em; color:var(--ink);
-}
-.field__note{
-  position:absolute; margin:0; color:var(--label);
-  font-family:var(--font-mono); font-size:var(--ui-10);
-  letter-spacing:var(--track-ui); text-transform:uppercase; line-height:1.8;
-}
-.field__note--a{ right:var(--inset); bottom:calc(var(--chrome-b) + 96px);
-                 text-align:right; line-height:1.9; }
-/* Was 12vh, which is 94px at a 780-tall window and lands inside the
-   SCROLL readout's own band. */
-.field__note--b{ right:var(--inset); bottom:calc(var(--chrome-b) + 6px); }
+.field__mid{ position:absolute; left:var(--chrome-l); bottom:calc(var(--chrome-b) + 18px);
+             width:min(34vw, 520px); }
 
 /* ======================= 05 · DISPERSAL ==================================
    The composition comes apart with the material — but coming apart still
@@ -308,52 +399,10 @@ body.is-light .hud__mini{ filter:invert(1); }
 /* The anchor. Every other phase has one display-size element to enter on;
    without it this screen was 10px type wall to wall and the eye had
    nowhere to land first. */
-.disp__anchor{ position:absolute; left:var(--disp-side); top:23%; max-width:30vw; }
-.disp__idx{
-  margin:0 0 12px; color:var(--red);
-  font-family:var(--font-mono); font-size:var(--ui-10);
-  letter-spacing:var(--track-ui); text-transform:uppercase;
-}
-/* A SENTENCE, SO THE TRACKING GOES. The old title was the single word
-   UNPROVEN at .30em, letterspaced well past comfort so the word came apart
-   at the same rate the material did — the one place the type did the
-   concept rather than describing it. That trick only works on one word;
-   applied to a nine-word sentence it is unreadable. The sentence is the
-   better content, so the trick loses. */
-.disp__title{
-  margin:0; font-weight:500; line-height:.98; color:var(--ink);
-  font-size:clamp(1.5rem,2.9vw,2.9rem);
-  letter-spacing:-0.03em; max-width:16ch;
-}
-.disp__sub{
-  margin:18px 0 0; color:var(--slate);
-  font-family:var(--font-mono); font-size:var(--ui-10);
-  letter-spacing:var(--track-ui); text-transform:uppercase;
-}
-.disp__note{
-  margin:16px 0 0; color:var(--label);
-  font-family:var(--font-mono); font-size:var(--ui-10);
-  letter-spacing:var(--track-ui); text-transform:uppercase; line-height:1.9;
-}
-
-/* Left column, below the anchor and above the log (which owns the bottom
-   130px on this side). */
-/* Wider than the shared 34ch cap: the authored <br> breaks are the drawing,
-   and at 34ch the browser re-wrapped inside them into five ragged lines. */
-.frag--l1{ left:var(--disp-side); top:66%; max-width:42ch; }
-
-/* Vertical, set at the left edge of the cloud rather than at the window
-   edge — writing-mode instead of a rotate() so the box is measured upright
-   and cannot overlap what is beside it. */
-/* DROPPED BELOW THE HEADING. At top:19% this ran from y 171 to 337 and the
-   new two-line sentence occupies 234 to 319 — the label printed straight
-   through it. The old title was one short word that never reached this far
-   right; a sentence does. Moving it down rather than right keeps it on the
-   cloud's leading edge, which is the only reason it is here. */
-.frag--vert{
-  left:25.5%; top:42%; writing-mode:vertical-rl;
-  color:var(--slate); max-width:none;
-}
+/* max() against --chrome-t: 23% is 207px on a 900-tall window but 166px on
+   a 720-tall one, where the index label started inside the minimap's box. */
+.disp__anchor{ position:absolute; left:var(--disp-side); top:max(23%, var(--chrome-t));
+               width:min(30vw, 480px); }
 
 /* THE THREE THAT CARRY THE SECTION. The right gutter used to hold two
    fragments of copy; they moved to the left, under the personal framing
@@ -378,12 +427,125 @@ body.is-light .hud__mini{ filter:invert(1); }
   pointer-events:none;
 }
 .pane.is-live .pcard{ pointer-events:auto; }
-.pcard i{ display:block; font-style:normal; color:var(--red); }
-.pcard b{ display:block; font-weight:400; color:var(--ink); margin-top:5px;
-          font-size:12px; letter-spacing:.06em; }
-.pcard span{ display:block; color:var(--label); margin-top:5px; }
+/* A step up from 10px on both lines: this is the section's content, and a
+   project name should not be the smallest thing in the card. */
+.pcard b{ display:block; font-weight:400; color:var(--ink);
+          font-size:13px; letter-spacing:.06em; }
+.pcard span{ display:block; color:var(--fog); margin-top:6px;
+             font-size:11px; line-height:1.6; }
 .pcard s{ display:inline-block; text-decoration:none; margin-top:9px; }
 .pcard:hover{ border-color:var(--red-ghost); }
+/* The project whose panel is open. */
+.pcard.is-active{ border-color:var(--red); }
+.pslot.is-active{ border-style:solid; border-color:var(--red); }
+.pane.is-live .pslot{ pointer-events:auto; }
+
+/* ---- THE REVEAL -------------------------------------------------------------
+   A project surfaces OVER the particle field through a soft wave. See
+   js/reveal.js for the choreography; this is only the drawing.
+
+   The field is never touched: this is all DOM above the canvas, and outside
+   the wave's radius the layer is fully transparent, so the structure is
+   visible, moving, unchanged, everywhere the content is not. */
+@property --rv-r{ syntax:'<length>'; inherits:false; initial-value:0px; }
+
+.reveal-host{ position:absolute; inset:0; pointer-events:none; }
+.reveal{ position:absolute; inset:0; pointer-events:none; z-index:1;
+         transition:opacity 420ms linear 220ms;
+         /* DEFAULTS, AND THEY ARE LOAD-BEARING. js/reveal.js sets these per
+            project, but the second layer has none until the first switch -
+            and an undefined var() inside mask-image invalidates the whole
+            declaration, so that layer was drawn with NO mask: its empty
+            panel showed as a pale strip across the field. */
+         --ox:50%; --oy:50%; --rmax:0px; }
+.reveal.is-front{ z-index:2; }
+/* The previous project, overtaken by the next wave, goes quietly. */
+.reveal.is-fading{ opacity:0; }
+.reveal.is-snap, .reveal.is-snap *{ transition:none !important; animation:none !important; }
+
+/* THE RIPPLE. Two hairline rings that run out ahead of the content and are
+   gone before it settles. Sized by width/height, not scale(): scaling a
+   ring scales its 1px border into a band. */
+.reveal__ring{
+  position:absolute; left:var(--ox); top:var(--oy); width:0; height:0;
+  border-radius:50%; border:1px solid var(--route); translate:-50% -50%;
+  opacity:0;
+}
+.reveal.is-open .reveal__ring{ animation:rvRing 1200ms cubic-bezier(.3,.6,.35,1) both; }
+.reveal.is-open .reveal__ring + .reveal__ring{ animation-delay:150ms; }
+@keyframes rvRing{
+  0%  { width:0; height:0; opacity:0; }
+  12% { opacity:.55; }
+  /* Out to about the panel's own reach and no further: a ring that kept
+     going swept across the statement and the cards, which made a local
+     event look like the whole page reacting. */
+  100%{ width:calc(var(--rmax) * 1.6); height:calc(var(--rmax) * 1.6); opacity:0; }
+}
+
+/* THE WAVE. A radial mask with a 70px soft rim, radius animated through a
+   registered property. Opens slow-out; closes back into its own origin,
+   faster and ease-in, so leaving feels lighter than arriving. */
+.reveal__mask{
+  position:absolute; inset:0; --rv-r:0px;
+  -webkit-mask-image:radial-gradient(circle at var(--ox) var(--oy),
+                     #000 calc(var(--rv-r) - 70px), transparent var(--rv-r));
+          mask-image:radial-gradient(circle at var(--ox) var(--oy),
+                     #000 calc(var(--rv-r) - 70px), transparent var(--rv-r));
+  transition:--rv-r 520ms cubic-bezier(.55,0,.8,.2);
+}
+/* A gentle curve, measured: the first one (.16,.84) had covered 85% of the
+   radius a third of the way in, so the wave read as a snap followed by a
+   long settle. This one is still moving visibly at the halfway mark. */
+.reveal.is-open .reveal__mask{
+  --rv-r:var(--rmax); transition:--rv-r 1100ms cubic-bezier(.35,.55,.3,1);
+}
+
+/* Centred on the field, between the statement on the left and the cards on
+   the right, and height-aware so it clears the slots along the bottom on a
+   short window. Near-opaque ground so the text is read against paper, not
+   against particles; the field shows around it, not through it. */
+/* 52%, not 50%, and 33vw: at 1280x720 a centred 36vw panel started at
+   x 424, inside the statement's box (which ends at 452). Nudged right and
+   narrowed it starts at 454 - over 100px past the statement's actual text,
+   which ends at 348 - and still stops 35px short of the cards. */
+.reveal__panel{
+  position:absolute; left:52%; top:46%; translate:-50% -50%;
+  width:min(540px, 33vw, 60vh); padding:26px 28px 24px;
+  background:color-mix(in srgb, var(--ground) 94%, transparent);
+  border:1px solid var(--line);
+}
+.reveal.is-open.is-front .reveal__panel{ pointer-events:auto; }
+/* And a panel with nothing in it is never drawn, mask or no mask. */
+.reveal__panel:empty{ display:none; }
+/* The content arrives a beat behind the wave, line by line. */
+.reveal__panel > *{ opacity:0; translate:0 10px;
+                    transition:opacity 240ms linear, translate 240ms ease; }
+.reveal.is-open .reveal__panel > *{
+  opacity:1; translate:0 0;
+  transition:opacity 420ms linear, translate 640ms cubic-bezier(.16,.84,.3,1);
+  transition-delay:calc(200ms + var(--i, 0) * 80ms);
+}
+.rv__name{
+  display:table; margin:0; font-weight:500; color:var(--ink);
+  font-size:clamp(1.3rem, 1.8vw, 1.75rem); letter-spacing:-0.02em; line-height:1.1;
+}
+.rv__desc{ margin:10px 0 0; max-width:44ch; color:var(--fog); font-size:15px; line-height:1.4; }
+/* Two frames sit side by side, four make a grid, three put the first one
+   full width - the hero shot - over the other two. */
+.rv__shots{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:18px; }
+.rv__shots > :first-child:nth-last-child(3){ grid-column:1 / -1; }
+.rv__shot{
+  aspect-ratio:16 / 10; margin:0; overflow:hidden; display:flex;
+  align-items:center; justify-content:center; background:rgba(128,128,128,.06);
+  font-family:var(--font-mono); font-size:var(--ui-10);
+  letter-spacing:var(--track-ui); text-transform:uppercase;
+}
+.rv__shot img{ display:block; width:100%; height:100%; object-fit:cover; }
+.rv__link{
+  display:inline-block; margin-top:16px; text-decoration:none;
+  font-family:var(--font-mono); font-size:var(--ui-10);
+  letter-spacing:var(--track-ui); text-transform:uppercase;
+}
 
 /* Texture, not information. Mirrored, tiny, half-faded, sitting on the
    cloud edge — a ghost of the word, not a second copy of it. */
@@ -411,7 +573,6 @@ body.is-light .hud__mini{ filter:invert(1); }
   font-family:var(--font-mono); font-size:var(--ui-10);
   letter-spacing:var(--track-ui); text-transform:uppercase; line-height:1.7;
 }
-.pslot i{ display:block; font-style:normal; color:var(--red); margin-bottom:6px; }
 .pslot b{ display:block; font-weight:400; color:var(--ink); }
 .pslot span{ display:block; color:var(--label); margin-top:4px; }
 
@@ -481,7 +642,8 @@ body.is-light .hud__mini{ filter:invert(1); }
   font-family:var(--font-mono); font-size:var(--ui-10);
   letter-spacing:var(--track-ui); text-transform:uppercase; line-height:1.85;
 }
-.ftr__notes p{ margin:0; position:relative; padding-left:20px; }
+/* 28px, not 20: the numbers are two digits now (01-03). */
+.ftr__notes p{ margin:0; position:relative; padding-left:28px; }
 .ftr__notes i{ position:absolute; left:0; font-style:normal; }
 .ftr__foot{ margin:0; font-family:var(--font-mono); font-size:var(--ui-10);
             letter-spacing:var(--track-ui); text-transform:uppercase; }
@@ -506,18 +668,18 @@ body.is-light .bar{ background:rgba(240,240,236,.80); }
    10px, on the only three contact links the site has. The bar stands on
    near-black and the footer stands on red; one colour cannot serve both,
    so neither takes it from here. */
-.ftr__nav a,.bar__btn,.bar__mail{
+.ftr__nav a,.bar__btn,.bar__git{
   font-family:var(--font-mono); font-size:var(--ui-10);
   letter-spacing:var(--track-ui); text-transform:uppercase;
   display:inline-flex; align-items:center; gap:5px;
   transition:color .18s;
 }
-.bar__btn,.bar__mail{ color:var(--fog); }
+.bar__btn,.bar__git{ color:var(--fog); }
 /* 5.3:1 on --red, against the 4.5:1 floor. */
 .ftr__nav a,.ftr__nav a i{ color:#000; }
-.bar__btn i,.bar__mail i{ font-style:normal; color:var(--label); }
-.bar__btn:hover,.bar__mail:hover,
-.bar__btn:hover i,.bar__mail:hover i{ color:var(--red); }
+.bar__btn i,.bar__git i{ font-style:normal; color:var(--label); }
+.bar__btn:hover,.bar__git:hover,
+.bar__btn:hover i,.bar__git:hover i{ color:var(--red); }
 .bar__btn.is-on,.bar__btn.is-on i{ color:var(--red); }
 .bar__clock{
   display:flex; align-items:center; gap:8px;

@@ -78,8 +78,13 @@ window.PAGE.register('tear', function (scope) {
   gl.enable(gl.BLEND);
   gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 
+  /* A phone draws the ground at 1x. It is a flat fill with a noise edge -
+     nothing in it needs a second or third device pixel - and at 3x this one
+     full-screen quad would otherwise shade more pixels than the whole point
+     cloud does. */
+  var DPR_CAP = document.documentElement.classList.contains('is-mobile') ? 1 : 2;
   function resize() {
-    var dpr = Math.min(window.devicePixelRatio || 1, 2);
+    var dpr = Math.min(window.devicePixelRatio || 1, DPR_CAP);
     canvas.width = Math.floor(canvas.clientWidth * dpr);
     canvas.height = Math.floor(canvas.clientHeight * dpr);
     gl.viewport(0, 0, canvas.width, canvas.height);

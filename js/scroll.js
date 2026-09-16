@@ -25,6 +25,7 @@ window.PAGE.register('scroll', function (scope) {
   var ftr   = scope.querySelector('#ftr');
   var hud   = scope.querySelector('.hud');
   var bar   = scope.querySelector('.bar');
+  var words = scope.querySelectorAll('.bgw__word');
   if (!track || !panes.length) return;
 
   var COUNT = panes.length;              // 5 phases
@@ -247,6 +248,22 @@ window.PAGE.register('scroll', function (scope) {
          0.6 rather than 0 so the hand-off happens while the incoming pane
          is already readable, not at the instant it stops being invisible. */
       p.classList.toggle('is-live', o > 0.6);
+    });
+
+    /* THE BACKGROUND WORDS, on the same distance as the panes but slower.
+       They travel at 45% of the copy's speed, so they read as further back
+       than the type rather than printed on the same sheet.
+
+       GONE BY THE HALFWAY POINT, like the text. A wider fade that let each
+       word linger past d = 0.5 looked atmospheric in isolation and, between
+       two sections, put BACKEND and SYSTEMS on screen together at a third
+       strength each - two giant words overprinted, which is noise. At 0.5
+       both are at zero, so one word hands over to the next. */
+    Array.prototype.forEach.call(words, function (w) {
+      var d = pxPhase - (+w.getAttribute('data-phase'));
+      var o = 1 - Math.min(1, Math.max(0, (Math.abs(d) - 0.06) / 0.42));
+      w.style.opacity = o;
+      w.style.transform = o > 0 ? 'translate3d(0,' + (-d * VH * 0.45).toFixed(1) + 'px,0)' : '';
     });
 
     // current phase marker in the bar

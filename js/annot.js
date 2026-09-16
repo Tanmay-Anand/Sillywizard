@@ -1,9 +1,10 @@
 /* ==========================================================================
    annot.js — leader lines from the copy to the subject.
 
-   Two phases annotate the object the way a technical drawing annotates a
-   part: a block of copy in a gutter, a thin line, a point on the thing
-   itself. The whole value of that is the line ENDING SOMEWHERE REAL, which
+   SYSTEMS annotates the object the way a technical drawing annotates a
+   part: a question in a gutter, a thin line, a point on the thing itself.
+   (BACKEND used to as well; its callouts became one statement. The
+   data-slice anchor below still works if a phase wants them back.) The whole value of that is the line ENDING SOMEWHERE REAL, which
    is why these are projected rather than drawn.
 
    WHY NOT A STATIC LINE. A fixed diagonal pointing at the middle of the
@@ -100,7 +101,8 @@ window.PAGE.register('annot', function (scope) {
     function (svg) {
       var pane = svg.closest('.pane');
       if (!pane) return;
-      var blocks = Array.prototype.slice.call(pane.querySelectorAll('[data-anchor],[data-slice]'));
+      var blocks = Array.prototype.slice.call(
+        pane.querySelectorAll('[data-anchor],[data-slice],[data-route]'));
       if (!blocks.length) return;
 
       var mk = buildMask(svg);
@@ -108,9 +110,45 @@ window.PAGE.register('annot', function (scope) {
          declares it, and a pin has to be picked out of the right shell. */
       var phase = +(pane.getAttribute('data-phase') || 0);
       var items = blocks.map(function (el) {
+        /* ---- A ROUTE: several points on the subject, walked in order ----
+           data-route="x,y,z x,y,z ..." lists nodes from the ORIGIN, deep in
+           the structure, to the node the path leaves from. Each is pinned to
+           a real particle like any anchor, so the whole path travels with
+           the material. Drawn as one polyline plus a dot per node; no
+           highlight, because on the paper ground the highlight is yellow
+           and this phase is monochrome. Red only while its callout is
+           hovered - the one active state on the screen. */
+        var route = el.getAttribute('data-route');
+        if (route) {
+          var seeds = route.trim().split(/\s+/).map(function (t) {
+            return t.split(',').map(Number);
+          });
+          var poly = document.createElementNS(NS, 'polyline');
+          poly.setAttribute('class', 'annot__route');
+          mk.layer.appendChild(poly);
+          var dots = seeds.map(function (_, i) {
+            var c = document.createElementNS(NS, 'circle');
+            c.setAttribute('class', i === 0 ? 'annot__node annot__node--root' : 'annot__node');
+            c.setAttribute('r', i === 0 ? '3.5' : '3');
+            mk.layer.appendChild(c);
+            return c;
+          });
+          var on = function (v) {
+            poly.classList.toggle('is-on', v);
+            dots.forEach(function (d) { d.classList.toggle('is-on', v); });
+          };
+          el.addEventListener('pointerenter', function () { on(true); });
+          el.addEventListener('pointerleave', function () { on(false); });
+          el.addEventListener('focusin', function () { on(true); });
+          el.addEventListener('focusout', function () { on(false); });
+          return { el: el, route: true, poly: poly, dots: dots, seeds: seeds,
+                   pins: seeds.map(function () { return -1; }), phase: phase };
+        }
+
         var raw = el.getAttribute('data-anchor');
+        var end = raw === 'end';
         var line = document.createElementNS(NS, 'line');
-        line.setAttribute('class', 'annot__line');
+        line.setAttribute('class', end ? 'annot__line annot__line--end' : 'annot__line');
         var dot = document.createElementNS(NS, 'circle');
         dot.setAttribute('class', 'annot__dot');
         dot.setAttribute('r', '2');
@@ -119,7 +157,10 @@ window.PAGE.register('annot', function (scope) {
         return {
           el: el, line: line, dot: dot, phase: phase, pin: -1,
           slice: el.hasAttribute('data-slice') ? +el.getAttribute('data-slice') : null,
-          a: raw ? raw.split(',').map(Number) : null,
+          /* "end" is not a place, it is a question for the renderer: the
+             last point of the shape. Resolved by state.pinLowest(). */
+          end: end,
+          a: raw && !end ? raw.split(',').map(Number) : null,
           /* Which edge the line leaves from. Read once — it cannot change.
              Checked on an ANCESTOR as well as the element: in BACKEND the
              side is a class on the block itself, but in SYSTEMS the
@@ -127,7 +168,7 @@ window.PAGE.register('annot', function (scope) {
              carry no class of their own. Testing only the element left
              every right-hand question emitting its leader from the wrong
              edge, so the line crossed back over its own text. */
-          right: !!el.closest('.annot--r, .flow--r') ||
+          right: !!el.closest('.annot--r, .flow--r, .flow__end') ||
                  el.hasAttribute('data-from-right')
         };
       });
@@ -183,12 +224,17 @@ window.PAGE.register('annot', function (scope) {
 
     var solved = 0;
     rig.items.forEach(function (it) {
+      if (it.route) { solved = drawRoute(it, S, host, solved); return; }
+
       /* CHOOSING THE PARTICLE. A linear scan of 110,000 points, so at most
          one per frame: fourteen anchors settle inside a quarter of a second
          and no single frame ever pays for more than one of them. Until an
          item is pinned it uses the analytic anchor, which is exact at the
          middle of the phase — where the pane is when you arrive at it. */
-      if (it.pin < 0 && !solved && typeof S.pin === 'function') {
+      if (it.pin < 0 && !solved && it.end && typeof S.pinLowest === 'function') {
+        it.pin = S.pinLowest(it.phase); solved = 1;
+      }
+      if (it.pin < 0 && !solved && !it.end && typeof S.pin === 'function') {
         /* The seed is the slab's RESTING place, on its near edge and on the
            side the copy is: the leader should touch the plate it names, and
            a point on the axis of rotation never moves when the subject
@@ -213,7 +259,13 @@ window.PAGE.register('annot', function (scope) {
           a = [c.x, c.y, c.z];
         }
       }
-      if (!a) return;
+      /* isFinite too: a typo in data-anchor parses to NaN, and one NaN in
+         uHot makes the shader's distance test NaN for EVERY point, which
+         lights the entire subject rather than failing at the one callout. */
+      if (!a || !isFinite(a[0] + a[1] + a[2])) {
+        it.line.setAttribute('opacity', '0');
+        it.dot.setAttribute('opacity', '0'); return;
+      }
       rig.hot.push([a[0], a[1], a[2], rig.amp]);
 
       var p = S.project(a[0], a[1], a[2]);
@@ -260,6 +312,55 @@ window.PAGE.register('annot', function (scope) {
     });
 
     publish();
+  }
+
+  /* ---- ROUTES ----------------------------------------------------------
+     Through the nodes, then OUT: from the last node the path runs on a
+     diagonal to the height of its callout's name and then level into the
+     callout's rule. The diagonal is what makes it read as the same path
+     leaving the structure rather than a second line starting where the
+     first stopped; the level run is what lands it squarely on the words.
+
+     Returns the updated one-pin-per-frame flag, shared with the anchors. */
+  function drawRoute(it, S, host, solved) {
+    var pts = [], i;
+    for (i = 0; i < it.seeds.length; i++) {
+      var sd = it.seeds[i];
+      if (it.pins[i] < 0 && !solved && typeof S.pin === 'function') {
+        it.pins[i] = S.pin(sd[0], sd[1], sd[2], it.phase); solved = 1;
+      }
+      var q = it.pins[i] >= 0 && typeof S.pinAt === 'function' ? S.pinAt(it.pins[i]) : null;
+      var a = q ? [q.x, q.y, q.z] : sd;
+      var p = isFinite(a[0] + a[1] + a[2]) ? S.project(a[0], a[1], a[2]) : null;
+      if (!p || !isFinite(p.x) || !isFinite(p.y)) {
+        it.poly.setAttribute('opacity', '0');
+        it.dots.forEach(function (d) { d.setAttribute('opacity', '0'); });
+        return solved;
+      }
+      pts.push([p.x - host.left, p.y - host.top]);
+    }
+
+    /* Lands on the NAME, the first line of the callout, at its left rule. */
+    var box = it.el.getBoundingClientRect();
+    var head = (it.el.firstElementChild || it.el).getBoundingClientRect();
+    var tx = box.left - host.left, ty = head.top + head.height / 2 - host.top;
+    var last = pts[pts.length - 1];
+    /* The elbow: 3 across for every 4 down, but never closer than 36px to
+       the callout, so the level run is always long enough to read. */
+    var ex = Math.min(last[0] + Math.abs(ty - last[1]) * 0.75, tx - 36);
+    if (ex < last[0]) ex = last[0];
+    var all = pts.concat([[ex, ty], [tx, ty]]);
+
+    it.poly.setAttribute('points', all.map(function (v) {
+      return v[0].toFixed(1) + ',' + v[1].toFixed(1);
+    }).join(' '));
+    it.poly.setAttribute('opacity', '1');
+    for (i = 0; i < it.dots.length; i++) {
+      it.dots[i].setAttribute('cx', pts[i][0].toFixed(1));
+      it.dots[i].setAttribute('cy', pts[i][1].toFixed(1));
+      it.dots[i].setAttribute('opacity', '1');
+    }
+    return solved;
   }
 
   /* THE UNION OF EVERY RIG, not whichever one ran last.
