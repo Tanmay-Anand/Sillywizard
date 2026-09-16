@@ -81,7 +81,6 @@
      Measured, at 1900x900, from the live DOM:
        map          x 22..209   y 22..215
        readout      x 1668..1878  y 22..114
-       log stack    x 22..362   y 761..846   (grows upward as lines land)
        scroll       x 1578..1878  y 815..846
        vertical rail x 22..37    y centred, 125 tall
 
@@ -92,7 +91,10 @@
   --rail-w:15px;
   --chrome-l:calc(var(--inset) + 30px);   /* left of this belongs to the rail */
   --chrome-t:200px;                       /* map and readout */
-  --chrome-b:145px;                       /* log stack, scroll readout, bar */
+  /* The bottom-left log stack that set this is gone; the band is kept so
+     every statement anchored to it stays where it was designed, and the
+     scroll readout and the bar still own the bottom-right. */
+  --chrome-b:145px;                       /* scroll readout, bar */
 }
 
 *,*::before,*::after{ box-sizing:border-box; }
@@ -118,7 +120,7 @@ a{ color:inherit; text-decoration:none; }
 
 /* ---- the microtype primitive ---------------------------------------------
    Everything that is not display type is this. Uppercase, 10px, tracked open,
-   mono. Used by the HUD, the bar, the log, the pane indices. */
+   mono. Used by the HUD, the bar, the pane indices. */
 .mono,.hud,.bar,.pane__idx,.pane__sub,.ftr__foot,.loader,.gate__foot{
   font-family:var(--font-mono);
   font-size:var(--ui-10);

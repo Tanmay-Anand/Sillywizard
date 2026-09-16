@@ -106,7 +106,7 @@
      the same construction as the desktop subject, rendered once at build
      time by tools/make-og.py. -->
 <div class="m-read" aria-hidden="true">
-  <span>SUBSTRATE <span class="dim">//</span> <b data-m-phase>BUILD</b></span>
+  <span>TANMAY ANAND <span class="dim">//</span> <b data-m-phase>BUILD</b></span>
   <span>GMT+5:30 <span data-m-time>00:00:00</span></span>
 </div>
 <!-- A DIV, NOT AN IMG, and the src lives in css/mobile.css.
@@ -128,6 +128,20 @@
   <!-- The ground, then the subject on top of it. Order is load-bearing:
        see js/tear.js. -->
   <canvas id="tear" class="tear"></canvas>
+  <!-- THE BACKGROUND WORDS. Texture, not content - which is why they are
+       aria-hidden and why none of them is the section's heading. They live
+       HERE, between the ground and the particle canvas, rather than in the
+       panes: a pane is above the canvas, so a word inside one would paint
+       over the subject instead of being partly hidden by it. js/scroll.js
+       moves and fades each one against its own phase. Three words, three
+       different treatments, so the sections rhyme without turning into a
+       template: 02 whole and quiet, 03 cut into pieces, 04 too big for the
+       screen. -->
+  <div class="bgw" aria-hidden="true">
+    <p class="bgw__word bgw__word--backend" data-phase="1">BACKEND</p>
+    <p class="bgw__word bgw__word--systems" data-phase="2"><span data-t="SYS">SYS</span><span data-t="TEMS">TEMS</span></p>
+    <p class="bgw__word bgw__word--without" data-phase="3">WITHOUT<br />ME</p>
+  </div>
   <div class="sub"><canvas id="substrate"></canvas></div>
 
   <!-- ========================== INSTRUMENT PANEL ======================== -->
@@ -153,9 +167,7 @@
       <div class="hud__row"><span>uptime</span><b data-hud-uptime>00:00:00</b></div>
     </div>
 
-    <p class="hud__edge hud__edge--l">SUBSTRATE / SW-001</p>
-
-    <div class="hud__log" data-hud-log></div>
+    <p class="hud__edge hud__edge--l">TANMAY ANAND</p>
 
     <div class="hud__prog">
       <span class="hud__progn" data-hud-progn>000</span>
@@ -181,54 +193,36 @@
         <h2 class="void__say">Most of what<br />I build is<br />invisible.</h2>
       </section>
 
-      <!-- 02 · THE ANNOTATION ------------------------------------------
-           This was a "river": 21 single lines alternating left and right,
-           one per row, reading top to bottom as one passage that parted
-           around the subject. It is now a technical drawing — six blocks in
-           the two gutters, each with a leader line to a real point on the
-           object. See js/annot.js.
-
-           data-anchor is MODEL SPACE, the same coordinates the geometry in
-           js/substrate.js is built in: roughly x +-0.35, y 0.10 to 1.42. -->
+      <!-- 02 · BACKEND -----------------------------------------------------
+           One statement beside the stack, in the order it is meant to be
+           read: what I do, what that means in practice, what it is built
+           with. The six leader-line callouts that used to flank the slabs
+           said the same things in fragments; this says them once, at a size
+           nobody has to lean in for. -->
       <section class="pane pane--river" data-phase="1" aria-label="Phase 02, Backend">
-
-        <p class="annot__head">BACKEND <span class="dim">//</span> MAKING SOMETHING HOLD</p>
-
-        <div class="annot annot--l" style="--at:26%" data-slice="11">
-          <p>Backend services<br />built around real systems.</p>
+        <div class="lede river__lede">
+          <p class="lede__idx">02 <span class="dim">//</span> BACKEND</p>
+          <h2 class="lede__say">I build systems behind the interface.</h2>
+          <p class="lede__desc">Backend services, APIs, and business logic built around real systems.</p>
+          <p class="lede__meta">Java <span class="dim">·</span> Spring Boot <span class="dim">·</span> REST
+            <span class="dim">·</span> Data <span class="dim">·</span> Integration</p>
         </div>
-        <div class="annot annot--l" style="--at:48%" data-slice="7">
-          <p>APIs.<br />Business logic.<br />Validation.<br />Data.<br />Integration.</p>
-        </div>
-        <div class="annot annot--l" style="--at:70%" data-slice="3">
-          <p>Working with constraints<br />is part of the job.</p>
-        </div>
-
-        <div class="annot annot--r" style="--at:24%" data-slice="12">
-          <p>Java.<br />Spring Boot.<br />REST APIs.</p>
-        </div>
-        <div class="annot annot--r" style="--at:50%" data-slice="6">
-          <p>Existing databases.<br />Existing architecture.<br />Existing rules.</p>
-        </div>
-        <div class="annot annot--r" style="--at:72%" data-slice="2">
-          <p>Designing around<br />what is already there.</p>
-        </div>
-
-        <p class="annot__foot"><span class="dim">//</span> controllers
-          <span class="dim">//</span> services <span class="dim">//</span> repositories
-          <span class="dim">//</span> dtos <span class="dim">//</span> configuration
-          <span class="dim">//</span> domain rules</p>
-
-        <!-- Drawn into by js/annot.js, one line and one endpoint dot per
-             block. Empty in the markup on purpose: if the module never
-             mounts there is nothing half-drawn left behind. -->
-        <svg class="annot__lines" data-annot-lines aria-hidden="true"></svg>
       </section>
 
       <!-- 03 · THE LEDGER ----------------------------------------------
            A technical index, not prose. Numbered rows, hairline rules,
            right-aligned status column. Reads as a schematic. -->
       <section class="pane pane--ledger" data-phase="2" aria-label="Phase 03, Systems">
+
+        <!-- The statement is first in the markup and bottom-left on the
+             desktop screen, under the questions - so a screen reader and a
+             phone both get the claim before the questions that unpack it. -->
+        <div class="lede ledger__lede">
+          <p class="lede__idx">03 <span class="dim">//</span> SYSTEMS</p>
+          <h2 class="lede__say">Start with the system.<br />Then write the code.</h2>
+          <p class="lede__desc">Understand the problem. Find the constraints.<br />
+            Define the boundaries.<br />Decide what should exist.</p>
+        </div>
 
         <!-- THE ORDER THE QUESTIONS GET ASKED IN, deliberately with no
              worked example attached. A single case study dates, and invites
@@ -242,58 +236,89 @@
              the order of the list was not already doing, and on a sequence
              this short they read as a parts list rather than a train of
              thought. -->
+        <!-- PLACED, NOT STACKED. --y is where the line of text sits, as a
+             share of the screen's height; --dx nudges it right (+) or left
+             (-), so closer on one side is farther on the other. The left
+             four are held in the upper half because the statement owns the
+             bottom-left corner; the right side runs the full height. The
+             two sides are deliberately out of step so no left question
+             reads as the partner of a right one, and
+             each side's anchors run top to bottom in the same order as its
+             text, so no two leaders on a side ever cross.
+
+             data-anchor is still only a seed — the leader snaps to the
+             nearest real particle of the colony (js/annot.js). -->
         <div class="flow flow--l">
-          <p data-anchor="-0.05,1.30,0.06">What is actually the problem?</p>
-          <p data-anchor="-0.12,1.10,-0.04">What can't I change?</p>
-          <p data-anchor="-0.14,0.88,0.07">Where should the boundaries be?</p>
-          <p data-anchor="-0.09,0.66,0.02">Who owns each decision?</p>
+          <p style="--y:19%;--dx:2.4vw"  data-anchor="-0.066,1.460,0">What is actually the problem?</p>
+          <p style="--y:28%;--dx:-1.8vw" data-anchor="-0.182,1.312,0">What can't I change?</p>
+          <p style="--y:36%;--dx:3.6vw"  data-anchor="-0.090,1.096,0">Where should the boundaries be?</p>
+          <p style="--y:47%;--dx:-0.6vw" data-anchor="-0.294,0.768,0">Who owns each decision?</p>
         </div>
         <div class="flow flow--r">
-          <p data-anchor="0.11,1.18,-0.06">What should know about what?</p>
-          <p data-anchor="0.14,0.94,0.05">What happens when it fails?</p>
-          <p data-anchor="0.10,0.70,-0.08">How will I know it failed?</p>
-          <p data-anchor="0.06,0.44,0.04">And only then, build.</p>
+          <p style="--y:24%;--dx:1.2vw"  data-anchor="0.066,1.344,0">What should know about what?</p>
+          <p style="--y:41%;--dx:-2.6vw" data-anchor="0.242,0.844,0">What happens when it fails?</p>
+          <p style="--y:58%;--dx:3vw"    data-anchor="0.174,0.652,0">How will I know it failed?</p>
         </div>
-
-        <!-- Kept from the table that used to fill the right gutter: the
-             stack itself is gone, this is the claim that was underneath
-             it and is the only mention of security work on the site. -->
-        <p class="flow__foot">Self-directed labs in network and systems
-          security, built to understand how boundaries fail rather than to
-          collect certificates.</p>
+        <!-- THE CONCLUSION, out of the column on purpose. Seven questions
+             probe the structure; this is where the reasoning comes out, so
+             its leader runs to the colony's LAST point — "end" is resolved
+             to the lowest particle of the shape rather than to coordinates
+             someone guessed. Last in the markup so it is still read last. -->
+        <p class="flow__end" style="--y:76%;--dx:-0.8vw" data-anchor="end">And only then, build.</p>
 
         <svg class="annot__lines" data-annot-lines aria-hidden="true"></svg>
       </section>
 
-      <!-- 04 · THE WORD FIELD ------------------------------------------
-           Two vertical word columns flanking the subject, the ground
-           inverting underneath them. No sentences at all on this screen. -->
+      <!-- 04 · AUTOMATION --------------------------------------------------
+           The two word columns that flanked the subject are gone: every word
+           in them is in the supporting line now, as a sentence someone can
+           read rather than a list they have to assemble. -->
       <section class="pane pane--field" data-phase="3" aria-label="Phase 04, Automation">
-        <div class="field__col field__col--l">
-          <p class="field__lbl">AUTOMATION<br />WHERE IT ACTUALLY HELPS.</p>
-          <p>DATA PROCESSING.</p><p>REPEATED TASKS.</p><p>SCHEDULED JOBS.</p>
-          <p>INTERNAL TOOLS.</p><p>AI-ASSISTED WORKFLOWS.</p>
+        <div class="lede field__mid">
+          <p class="lede__idx">04 <span class="dim">//</span> AUTOMATION</p>
+          <h2 class="lede__say">WORK THAT<br />RUNS WITHOUT<br />ME.</h2>
+          <p class="lede__desc">Repeated work<br />becomes a system.</p>
+          <p class="lede__more">Scheduled jobs, data pipelines, internal tools, <span class="nb">AI-assisted</span>
+            workflows, retries, and observability.</p>
+          <p class="lede__more lede__more--ink">The goal is simple.<br />
+            Remove the repetition.</p>
         </div>
-        <div class="field__mid">
-          <!-- The index says AUTOMATION and nothing else. It used to read
-               "AUTOMATION // WORK THAT RUNS WITHOUT ME" directly above type
-               four times its size saying the same words — the repeat weakened
-               both, and the big type is perfectly capable of carrying it. -->
-          <p class="field__idx">04 <span class="dim">//</span> AUTOMATION</p>
-          <p class="field__say">WORK THAT<br />RUNS WITHOUT<br />ME</p>
-          <p class="field__goal"><span class="dim">The goal is simple:</span><br />
-            remove work without hiding the system.</p>
+
+        <!-- THREE OUTPUTS OF ONE SYSTEM. Each callout is fed by a route: a
+             walk along real edges of the globe, origin first, drawn by
+             js/annot.js and bent out to the callout's name. Top to bottom on
+             the screen matches top to bottom in the structure, so the three
+             paths divide it into three regions and never cross.
+
+             Each seed is a node centre from the globe's own graph
+             (window.SUBSTRATE.graph(3)), and consecutive seeds are joined by
+             an edge the globe draws: nodes 9-6-11-8-21, 32-24-37-29-34 and
+             43-48-61-58-55. All face the camera, so no path runs across the
+             far side of the sphere.
+
+             The names and sentences are PLACEHOLDERS, marked as such in the
+             design - no automation project has been supplied yet, and
+             nothing here is invented. Replace the text; the routes do not
+             care what it says. -->
+        <div class="auto">
+          <article class="auto__out" style="--y:22%" data-route="-0.362,1.128,0.150 -0.092,1.220,0.344 0.135,1.114,0.430 0.325,1.115,0.119 0.579,0.931,0.078">
+            <b class="slot">project name</b>
+            <span>One sentence on what it automates.</span>
+            <s class="slot">view project &rarr; // url needed</s>
+          </article>
+          <article class="auto__out" style="--y:46%" data-route="0.099,0.711,0.574 0.268,0.855,0.467 0.397,0.613,0.437 0.521,0.768,0.274 0.732,0.660,-0.061">
+            <b class="slot">project name</b>
+            <span>One sentence on what it automates.</span>
+            <s class="slot">view project &rarr; // url needed</s>
+          </article>
+          <article class="auto__out" style="--y:68%" data-route="-0.605,0.448,0.310 -0.259,0.399,0.442 -0.062,0.175,0.190 0.185,0.204,0.268 0.422,0.237,0.022">
+            <b class="slot">project name</b>
+            <span>One sentence on what it automates.</span>
+            <s class="slot">view project &rarr; // url needed</s>
+          </article>
         </div>
-        <div class="field__col field__col--r">
-          <p>TRIGGERS.</p><p>QUEUES.</p><p>RETRIES.</p>
-          <p>LOGGING.</p><p>OBSERVABILITY.</p>
-        </div>
-        <p class="field__note field__note--a">WITHOUT SUPERVISION<br />
-          WITHOUT A PROMPT<br />WITHOUT ME<br /><br />
-          ON A SCHEDULE<br />ON A TRIGGER<br />REPEATEDLY</p>
-        <p class="field__note field__note--b">AI used where it removes work,
-          inside products never designed for it. Practical approaches to
-          complicated problems, not demos.</p>
+
+        <svg class="annot__lines" data-annot-lines aria-hidden="true"></svg>
       </section>
 
       <!-- 05 · DISPERSAL ------------------------------------------------
@@ -308,23 +333,15 @@
         <!-- The anchor. Every other phase has one display-size element to
              enter on; without it this screen was 10px type wall to wall and
              the eye had nowhere to land first. -->
-        <div class="disp__anchor">
-          <p class="disp__idx">05 <span class="dim">//</span> EXPERIMENTS</p>
-          <h2 class="disp__title">Not everything<br />starts as a brief.</h2>
-          <p class="disp__sub">side projects <span class="dim">·</span> strange ideas
-            <span class="dim">·</span> tools <span class="dim">·</span> interactive builds</p>
-          <p class="disp__note">Some become products.<br />
-            Some become lessons.<br />
-            All of them teach me something.</p>
+        <div class="lede disp__anchor">
+          <p class="lede__idx">05 <span class="dim">//</span> EXPERIMENTS</p>
+          <h2 class="lede__say">Not everything<br />starts as a brief.</h2>
+          <p class="lede__desc">Some ideas are worth<br />building just to find out.</p>
+          <p class="lede__more">Side projects, tools, interactive builds,<br />
+            and unfinished ideas.</p>
+          <p class="lede__more">Some become products.<br />Some become lessons.<br />
+            Some become something else.</p>
         </div>
-
-        <!-- Moved from the right gutter, which the project cards now own.
-             It belongs beside the personal framing anyway. -->
-        <p class="frag frag--l1">Programming since 2020.<br />
-          Professionally for one year.<br />
-          The gap between those two numbers is where most of this lives.</p>
-
-        <p class="frag frag--vert">no structure recoverable</p>
 
         <!-- Texture, not information — which is why it is mirrored and why
              that costs nothing. The reference reverses whole clusters where
@@ -332,33 +349,90 @@
              meant to READ is just a gimmick. -->
         <p class="frag frag--echo" aria-hidden="true">experiments</p>
 
-        <!-- THE THREE THAT CARRY THE SECTION, down the right gutter. No
-             paragraphs inside them on purpose: a card that explains itself
-             at length is doing the project's job badly. One line each. -->
+        <!-- THE REVEAL. js/reveal.js builds two layers in here and opens a
+             project over the particle field when its card or slot is hovered
+             or focused. aria-hidden: it is a visual duplicate of the card,
+             which already carries the name, the sentence and the link.
+
+             Each project's extra content lives in its own <template>:
+             .rv__shots holds 2-4 .rv__shot frames, each an <img> once real
+             screenshots exist. The frames below are PLACEHOLDERS - no
+             screenshots have been supplied for any project yet. -->
+        <div class="reveal-host" data-reveal-host aria-hidden="true"></div>
+
+        <!-- THE THREE THAT CARRY THE SECTION, down the right gutter. Name,
+             one sentence, a way in - and nothing else. The index numbers
+             went: they ranked projects the visitor has no reason to read in
+             order, and they were the first thing the eye hit in each card. -->
         <div class="disp__feat">
-          <article class="pcard">
-            <i>01</i><b>Praxis Chess</b>
+          <article class="pcard" data-reveal tabindex="0">
+            <b>Praxis Chess</b>
             <span>Interactive chess experience built from scratch.</span>
             <s class="slot">view project // url needed</s>
+            <template>
+            <div class="rv__shots">
+              <div class="rv__shot slot">screenshot // needed</div>
+              <div class="rv__shot slot">screenshot // needed</div>
+            </div>
+            </template>
           </article>
-          <article class="pcard">
-            <i>02</i><b class="slot">project name</b>
+          <article class="pcard" data-reveal tabindex="0">
+            <b class="slot">project name</b>
             <span>One line explaining what it does.</span>
             <s class="slot">view project // url needed</s>
+            <template>
+            <div class="rv__shots">
+              <div class="rv__shot slot">screenshot // needed</div>
+              <div class="rv__shot slot">screenshot // needed</div>
+            </div>
+            </template>
           </article>
-          <article class="pcard">
-            <i>03</i><b class="slot">project name</b>
+          <article class="pcard" data-reveal tabindex="0">
+            <b class="slot">project name</b>
             <span>One line explaining what was interesting.</span>
             <s class="slot">view project // url needed</s>
+            <template>
+            <div class="rv__shots">
+              <div class="rv__shot slot">screenshot // needed</div>
+              <div class="rv__shot slot">screenshot // needed</div>
+            </div>
+            </template>
           </article>
         </div>
 
         <!-- Everything else, smaller, along the bottom band — the only strip
              on this screen with no chrome in it. -->
         <div class="disp__slots">
-          <article class="pslot"><i>04</i><b class="slot">project name</b></article>
-          <article class="pslot"><i>05</i><b class="slot">project name</b></article>
-          <article class="pslot"><i>06</i><b class="slot">project name</b></article>
+          <article class="pslot" data-reveal tabindex="0"><b class="slot">project name</b>
+            <template>
+              <p class="rv__desc">One line explaining what it does.</p>
+              <div class="rv__shots">
+                <div class="rv__shot slot">screenshot // needed</div>
+                <div class="rv__shot slot">screenshot // needed</div>
+              </div>
+              <s class="slot rv__link">view project &rarr; // url needed</s>
+            </template>
+          </article>
+          <article class="pslot" data-reveal tabindex="0"><b class="slot">project name</b>
+            <template>
+              <p class="rv__desc">One line explaining what it does.</p>
+              <div class="rv__shots">
+                <div class="rv__shot slot">screenshot // needed</div>
+                <div class="rv__shot slot">screenshot // needed</div>
+              </div>
+              <s class="slot rv__link">view project &rarr; // url needed</s>
+            </template>
+          </article>
+          <article class="pslot" data-reveal tabindex="0"><b class="slot">project name</b>
+            <template>
+              <p class="rv__desc">One line explaining what it does.</p>
+              <div class="rv__shots">
+                <div class="rv__shot slot">screenshot // needed</div>
+                <div class="rv__shot slot">screenshot // needed</div>
+              </div>
+              <s class="slot rv__link">view project &rarr; // url needed</s>
+            </template>
+          </article>
         </div>
       </section>
 
@@ -376,16 +450,19 @@
       <nav class="ftr__nav" aria-label="Contact">
         <a href="https://github.com/Tanmay-Anand" target="_blank" rel="noopener" data-scramble><span data-label>github</span> <i>+</i></a>
         <a href="https://www.linkedin.com/in/tanmay-anand-8441931a0/" target="_blank" rel="noopener" data-scramble><span data-label>linkedin</span> <i>+</i></a>
+        <a href="https://medium.com/@tanmayanand2002_63440" target="_blank" rel="noopener" data-scramble><span data-label>medium</span> <i>+</i></a>
         <a href="mailto:tanmayanand2002@gmail.com" data-scramble><span data-label>email</span> <i>+</i></a>
       </nav>
     </div>
     <div class="ftr__notes">
-      <p><i>1</i> I would rather understand<br />why a system is shaped<br />the way it is</p>
-      <p><i>2</i> than implement<br />the ticket that<br />assumes it</p>
-      <p><i>3</i> Both, ideally.<br />In that order.</p>
+      <p><i>01</i> Understand the system<br />
+        before changing it.</p>
+      <p><i>02</i> Question the assumptions<br />
+        before implementing them.</p>
+      <p><i>03</i> Build with context.<br />
+        In that order.</p>
     </div>
-    <p class="ftr__foot">TANMAY ANAND <span class="dim">//</span> SILLYWIZARD
-      <span class="dim">//</span> SUBSTRATE SW-001 <span class="dim">//</span> GMT+5:30</p>
+    <p class="ftr__foot">TANMAY ANAND <span class="dim">//</span> SILLYWIZARD</p>
   </div>
 
   <!-- ================================= BAR ============================== -->
@@ -402,9 +479,12 @@
       <i class="bar__mark"></i>
       <span class="bar__time" data-clock-time>00:00:00</span>
     </div>
-    <button class="bar__mail" type="button" data-copy-email="tanmayanand2002@gmail.com">
-      <span data-label>copy address</span> <i>+</i>
-    </button>
+    <!-- aria-label CONTAINS the visible words, so "click open my git profile"
+         still works for voice control, and names the destination as well. -->
+    <a class="bar__git" href="https://github.com/Tanmay-Anand" target="_blank" rel="noopener"
+       aria-label="Open my git profile on GitHub" data-scramble>
+      <span data-label>open my git profile</span> <i>+</i>
+    </a>
   </footer>
 
 </main>
@@ -429,8 +509,8 @@
 (function () {
   var mobile = document.documentElement.classList.contains('is-mobile');
   var list = ['lifecycle', 'isolate', 'dormancy', 'hud', 'a11y', 'fps']
-    .concat(mobile ? ['mobile']
-                   : ['tearfn', 'face', 'substrate', 'tear', 'scroll', 'annot', 'loader'])
+    .concat(mobile ? ['reveal', 'phonemath', 'mobile', 'mpager']
+                   : ['tearfn', 'face', 'substrate', 'tear', 'scroll', 'annot', 'reveal', 'loader'])
     .concat(['boot']);
   for (var i = 0; i < list.length; i++) {
     var s = document.createElement('script');

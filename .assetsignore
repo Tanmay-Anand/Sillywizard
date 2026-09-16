@@ -13,3 +13,12 @@ serve.py
 assets/options
 assets/ref/README.txt
 node_modules
+
+# Test and CI tooling - never part of the site.
+tests
+coverage
+.github
+.husky
+package.json
+package-lock.json
+vitest.config.mjs

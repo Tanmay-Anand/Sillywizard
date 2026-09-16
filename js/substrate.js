@@ -770,6 +770,11 @@
     }
     console.info('[substrate] unattended:', nd.length + ' nodes,',
                  edge.length + ' edges');
+    /* The graph rides along on the array it produced. js/annot.js draws its
+       AUTOMATION routes along these exact edges, and the seeds in index.html
+       were read off this list (state.graph) - so a route is a walk through
+       struts the page actually draws, not a line laid over the top. */
+    a.nodes = nd; a.edges = edge;
     return a;
   }
 
@@ -1008,6 +1013,12 @@
        with — see js/tearfn.js for why it is shared rather than copied. */
     'uniform float uTear, uTearRed;',
     'uniform vec3 uInkDark;',
+    /* How bright the subject is on the DARK ground only. 1 on desktop. The
+       phone runs the object as a background at reduced strength - and that
+       used to be a CSS opacity on the whole canvas, which also turned the
+       black ink on the paper grey. Here it touches the dark curve alone, so
+       ink on paper stays as black as it is on desktop. */
+    'uniform float uDarkDim;',
     'varying float vT, vFade, vAnc, vHot;',
     'varying vec3 vCol;',
     window.TEAR_GLSL,
@@ -1150,7 +1161,7 @@
        full strength. So this is the whole curve: ~0.94 to 1.0, and a point
        centre on paper is black. */
     '    float aLight = mix(vFade, 1.0, 0.94);',
-    '    alpha = a * mix(aDark, aLight, ground) * (1.0 - rv);',
+    '    alpha = a * mix(aDark * uDarkDim, aLight, ground) * (1.0 - rv);',
     /* THE FRINGE AT THE OPENING. Brightest where the reveal is passing
        THROUGH — not at the centre, where the hole is simply open, and not
        outside it, where nothing is happening. A band on the reveal value,
@@ -1232,12 +1243,42 @@
     var canvas = scope.querySelector('#substrate');
     if (!canvas) return;
 
+    /* ---- TWO BUDGETS, ONE RENDERER ------------------------------------------
+       The phone runs this same file - same geometry, same shader, same five
+       phases - under a smaller budget, rather than a second renderer that
+       would drift from this one the first time either was edited.
+
+         n        points. 30k on a phone is not a guess: the object is drawn
+                  about 40% as large there (it is fitted to the WIDTH of a
+                  portrait screen), so 30k points land at the same density
+                  per screen pixel as 110k do on a desktop. Fewer would haze
+                  the colour fields; more is fill nobody can see.
+         dpr      a 3x phone would otherwise shade nine device pixels per CSS
+                  pixel. At 1.5 the dots are still crisp.
+         fluid    the hidden interior and the face reveal. A hover effect -
+                  and on a phone the portrait would be 2 MB of photograph
+                  fetched for an interaction a touch screen cannot perform.
+         pointer  the head turn and the reveal hole both follow the cursor.
+                  On touch, pointermove fires while SCROLLING, so leaving
+                  them on would open holes under the thumb on every swipe.
+
+       ?n=<count> overrides the point count, an instrument like ?fps and
+       ?off=: it is how the phone number gets tuned on a real phone. */
+    var PHONE = document.documentElement.classList.contains('is-mobile');
+    var P = PHONE
+      ? { n: 30000,  dpr: 1.5, fluid: false, pointer: false, power: 'default' }
+      : { n: 110000, dpr: 2,   fluid: true,  pointer: true,  power: 'high-performance' };
+    var nq = /[?&]n=(\d+)/.exec(location.search);
+    if (nq) P.n = Math.max(4000, Math.min(200000, +nq[1]));
+    N = P.n;
+
     /* preserveDrawingBuffer so the HUD minimap can drawImage() this canvas
        instead of standing up a second WebGL context for a 150px picture of
-       the same cloud. */
+       the same cloud. The phone has no minimap, so it does not pay for the
+       extra buffer copy. */
     var gl = canvas.getContext('webgl', {
-      alpha: true, antialias: false, preserveDrawingBuffer: true,
-      powerPreference: 'high-performance'
+      alpha: true, antialias: false, preserveDrawingBuffer: !PHONE,
+      powerPreference: P.power
     });
     if (!gl) { console.warn('[substrate] no webgl'); return; }
 
@@ -1293,7 +1334,7 @@
        The face is optional at load: if js/face.js is missing the interior
        stays unresolved at both ends and the reveal behaves exactly as it
        did before, rather than the subject failing to appear. */
-    var under = makeUnresolved(solid, colour);
+    var under = P.fluid ? makeUnresolved(solid, colour) : null;
     /* ---- THE INTERIOR CANNOT PAINT OUTSIDE THE SUBJECT ------------------
        The portrait is fitted to the collage's ENVELOPE, which is a box; the
        collage itself is a wizard. So the reveal was showing face material
@@ -1356,7 +1397,7 @@
       return g;
     }
 
-    var face = containToShell(window.FACE_GEOM ? window.FACE_GEOM(N) : null, solid);
+    var face = P.fluid ? containToShell(window.FACE_GEOM ? window.FACE_GEOM(N) : null, solid) : null;
     if (face) console.info('[substrate] face:', face.pool, 'points in pool');
     /* Neither interior state changes with phase, so these are TWO buffers
        bound once rather than five copies of each — the map() below would
@@ -1369,14 +1410,15 @@
       return bf;
     }
     var shellBuf = shells.map(upload);
-    var uBuf = upload(under.pos);
+    /* No interior on the phone: nothing to upload, nothing to draw. */
+    var uBuf = under ? upload(under.pos) : null;
     /* Index 0 is where the interior sits with the pointer away, index 1 is
        where it settles to — so drawLayer(0, 1, ...) below reads exactly
        like the shell's drawLayer(a, b, ...), with uSettle in place of
        uMorph. */
-    var fluidBuf = [uBuf, upload(face ? face.pos : under.pos)];
+    var fluidBuf = under ? [uBuf, upload(face ? face.pos : under.pos)] : null;
     var colBuf   = upload(colour);
-    var uColBuf  = upload(face ? face.col : under.col);
+    var uColBuf  = under ? upload(face ? face.col : under.col) : null;
 
     var rr2 = rng(5150), rand = new Float32Array(N * 3);
     for (var i = 0; i < N; i++) {
@@ -1389,7 +1431,7 @@
        the collage's anchor array marks the PANEL's two eyes. Bound to the
        face it would mark a few thousand arbitrary points instead, speckling
        the portrait with survivors. The face's anchors are its own eyes. */
-    var faceAncBuf = upload(face ? face.anchor : new Float32Array(N));
+    var faceAncBuf = under ? upload(face ? face.anchor : new Float32Array(N)) : null;
 
     /* AND IF A PHOTOGRAPH TURNS UP, IT WINS.
 
@@ -1401,7 +1443,7 @@
 
        Re-uploading rather than deferring the build is what keeps the failure
        mode boring — no photo, no wait, no empty interior. */
-    if (window.FACE_GEOM && window.FACE_GEOM.fromPhoto) {
+    if (P.fluid && window.FACE_GEOM && window.FACE_GEOM.fromPhoto) {
       window.FACE_GEOM.fromPhoto(N, function (g) {
         // same containment, or the photograph re-introduces the overspill
         g = containToShell(g, solid);
@@ -1427,7 +1469,7 @@
 
     var U = {};
     ['uProj','uView','uModel','uMorph','uSettle','uSpin','uTime','uEnergy','uScale','uLayer',
-     'uInk','uInkDark','uTear','uTearRed','uRes','uLook','uHot','uHotA','uHotN','uHotR','uRev','uRevRadius','uRevSoft','uRevWarp',
+     'uInk','uInkDark','uDarkDim','uTear','uTearRed','uRes','uLook','uHot','uHotA','uHotN','uHotR','uRev','uRevRadius','uRevSoft','uRevWarp',
      'uRevWarpScale','uRevWarpSpeed','uRevGlow'].forEach(function (n) {
       U[n] = gl.getUniformLocation(prog, n);
     });
@@ -1436,12 +1478,51 @@
     gl.enable(gl.BLEND);
     gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 
+    /* ---- THE CAMERA, IN ONE PLACE ------------------------------------------
+       Read by the frame (uView, uProj, uScale) AND by project() above, so a
+       leader line can never be aimed through a different camera from the
+       one that drew the subject.
+
+       Desktop: the numbers it has always had. The subject is sized by the
+       window HEIGHT and sits centred.
+
+       Phone: sized by the WIDTH instead. At the desktop distance the globe
+       is 0.69 of the screen height across - on a 375x812 portrait screen
+       that is 560px of object in a 375px window. The camera backs off until
+       the widest phase fills 86% of the width, and the image is shifted up
+       (camOY, in clip space, so perspective is untouched) to sit in the top
+       of the screen, above the copy.
+
+       uScale grows with the distance so a dot stays the same size on the
+       glass: the vertex stage divides point size by depth.
+
+       DECLARED ABOVE resize(), which calls frameCamera() on its first run.
+       Declared below it, `var camZ = 3.35` would execute AFTER that call and
+       quietly put the desktop distance back - the same hoisting trap this
+       file has already hit twice. */
+    var FOV = 0.62, camZ = 3.35, camY = -0.02, camOY = 0;
+    function frameCamera() {
+      if (!PHONE || W < 1 || H < 1) return;
+      camZ = Math.max(3.35, Math.min(7.5, 2.69 * H / W));
+      camOY = 0.40;
+    }
+
+    /* The phone's background strength, read from the one dial in
+       css/mobile.css (--m-obj-a, defined under .m-live). 1 everywhere else. */
+    var darkDim = 1;
+    function readDim() {
+      var v = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--m-obj-a'));
+      darkDim = PHONE && v > 0 && v <= 1 ? v : 1;
+    }
+
     var dpr = 1, W = 1, H = 1;
     function resize() {
-      dpr = Math.min(window.devicePixelRatio || 1, 2);
+      readDim();
+      dpr = Math.min(window.devicePixelRatio || 1, P.dpr);
       W = canvas.clientWidth; H = canvas.clientHeight;
       canvas.width = Math.floor(W * dpr); canvas.height = Math.floor(H * dpr);
       gl.viewport(0, 0, canvas.width, canvas.height);
+      frameCamera();
     }
     resize();
     window.addEventListener('resize', resize);
@@ -1508,9 +1589,11 @@
       }
     }
     function onLeave() { wantPointer = 0; }
-    window.addEventListener('pointermove', onMove);
-    window.addEventListener('pointerleave', onLeave);
-    window.addEventListener('blur', onLeave);
+    if (P.pointer) {
+      window.addEventListener('pointermove', onMove);
+      window.addEventListener('pointerleave', onLeave);
+      window.addEventListener('blur', onLeave);
+    }
 
     var drawnSpin = 0, drawnLookX = 0, drawnLookY = 0, drawnTime = 0;
 
@@ -1557,7 +1640,7 @@
 
       var c = Math.cos(drawnSpin), s = Math.sin(drawnSpin);
       var rx = c * px + s * pz, rz = -s * px + c * pz;  // uModel
-      var vx = rx, vy = py - 0.02, vz = rz - 3.35;      // uView
+      var vx = rx, vy = py + camY, vz = rz - camZ;      // uView
       var w = -vz;
       if (w < 0.05) return null;                        // behind the camera
       /* BEFORE THE FIRST RESIZE THE CANVAS IS 0x0, and dividing by an
@@ -1567,17 +1650,18 @@
          Nothing looks broken, which is exactly why it is worth catching. */
       if (canvas.width < 1 || canvas.height < 1 ||
           canvas.clientWidth < 1 || canvas.clientHeight < 1) return null;
-      var f = 1 / Math.tan(0.62 / 2);
+      var f = 1 / Math.tan(FOV / 2);
       var aspect = canvas.width / canvas.height;
       return {
         x: ((f / aspect) * vx / w * 0.5 + 0.5) * canvas.clientWidth,
-        y: (0.5 - f * vy / w * 0.5) * canvas.clientHeight
+        y: (0.5 - (f * vy / w + camOY) * 0.5) * canvas.clientHeight
       };
     };
   }
 
   var state = { progress: 0, phase: 0, morph: 0, spin: 0, energy: ENERGY[0],
                   reveal: 0, tear: 0, tearRed: 0 };
+
 
     /* AFTER the literal, not before it. This used to sit up beside the
        buffer uploads, which run earlier in this function — `var` hoists the
@@ -1647,6 +1731,47 @@
       return pins.length - 1;
     };
 
+    /* THE LAST POINT OF THE SHAPE, for a leader that has to land on the
+       end of the structure rather than somewhere near it.
+
+       Not the single lowest particle — that could be one stray grain below
+       the rest — but the particle nearest the middle of the lowest centimetre
+       of material. Picked here rather than handed to pin(): pin() is free to
+       choose anything within 3cm of its seed, which on a thing this small is
+       the difference between the end of the structure and a point just above
+       it (measured: 14px short). */
+    /* The node/edge graph of a phase, where one exists (only AUTOMATION's
+       globe is built from one). An authoring aid: route seeds in index.html
+       came from here. Returns the live node and edge objects themselves -
+       read them, do not write to them. */
+    state.graph = function (phase) {
+      var sh = shells[phase];
+      return sh && sh.nodes ? { nodes: sh.nodes, edges: sh.edges } : null;
+    };
+
+    state.pinLowest = function (phase) {
+      var ph = shells[Math.max(0, Math.min(shells.length - 1, phase | 0))];
+      var lo = 1e9, i, BAND = 0.010;
+      for (i = 0; i < N; i++) {
+        if (anchor[i] < 0.5 && ph[i*3+1] < lo) lo = ph[i*3+1];
+      }
+      var sx = 0, sz = 0, n = 0;
+      for (i = 0; i < N; i++) {
+        if (anchor[i] > 0.5 || ph[i*3+1] > lo + BAND) continue;
+        sx += ph[i*3]; sz += ph[i*3+2]; n++;
+      }
+      if (!n) return -1;
+      sx /= n; sz /= n;
+      var pick = -1, bd = 1e9;
+      for (i = 0; i < N; i++) {
+        if (anchor[i] > 0.5 || ph[i*3+1] > lo + BAND) continue;
+        var dx = ph[i*3] - sx, dz = ph[i*3+2] - sz, d = dx*dx + dz*dz;
+        if (d < bd) { bd = d; pick = i; }
+      }
+      pins.push(pick);
+      return pins.length - 1;
+    };
+
     /* The top of the vertex shader, in JS, and it has to stay that way: if
        the stagger window or the drift changes up there it changes here too,
        and the symptom is an arrow that misses by a few pixels for reasons
@@ -1676,7 +1801,7 @@
 
     var mini = scope.querySelector('#hudMini');
     var mctx = mini ? mini.getContext('2d') : null;
-    var frame = 0, raf = 0, t0 = performance.now(), last = t0, wasAsleep = false;
+    var frame = 0, raf = 0, t0 = performance.now(), last = t0, wasAsleep = false, halfFrame = false;
 
     function drawLayer(a, b, layer, bufs, cbuf, abuf) {
       gl.bindBuffer(gl.ARRAY_BUFFER, cbuf);
@@ -1747,7 +1872,7 @@
          state the page sits in whenever the cursor is still. */
       var live = havePointer;
       for (var lk = 1; lk < REV; lk++) if (rev[lk * 3 + 2] > live) live = rev[lk * 3 + 2];
-      var fluidWorthDrawing = live > 0.004 && !window.OFF.has('fluid')
+      var fluidWorthDrawing = P.fluid && live > 0.004 && !window.OFF.has('fluid')
                                            && !window.OFF.has('reveal');
 
       var p = Math.max(0, Math.min(PHASES.length - 1 - 0.0001, state.progress));
@@ -1766,6 +1891,12 @@
         return;
       }
       wasAsleep = false;
+      /* IDLE ON A PHONE: every other frame. js/mstage.js sets state.idle
+         once the page has been still for a moment and the shape has landed;
+         what is left moving is the drift, which is slow enough that half its
+         frames are invisible. Skipping a frame presents nothing new, so the
+         last one simply stays on the glass. */
+      if (PHONE && state.idle && (halfFrame = !halfFrame)) return;
       D.drawn++;
 
       gl.clearColor(0, 0, 0, 0);
@@ -1773,10 +1904,14 @@
       gl.useProgram(prog);
 
       var aspect = canvas.width / Math.max(canvas.height, 1);
-      gl.uniformMatrix4fv(U.uProj, false, persp(0.62, aspect, 0.1, 20));
+      /* camOY is added to clip-space y in proportion to w, which moves the
+         whole image on the glass without bending the perspective. */
+      var proj = persp(FOV, aspect, 0.1, 20);
+      proj[9] = -camOY;
+      gl.uniformMatrix4fv(U.uProj, false, proj);
       /* Camera pulled back so the subject sits in the middle third. The
          composition is mostly EMPTY on purpose. */
-      gl.uniformMatrix4fv(U.uView, false, transl(0, -0.02, -3.35));
+      gl.uniformMatrix4fv(U.uView, false, transl(0, camY, -camZ));
       /* ONE ANGLE, TWO CONSUMERS. uModel turns the subject; uSpin hands the
          same number to the vertex stage so the interior can give part of it
          back. Deriving it twice is how these drift apart. */
@@ -1828,7 +1963,7 @@
          neighbouring dots stopped overlapping translucently and started
          merging. Size is the dial for granularity; opacity is the dial for
          contrast. Turning the second one up means turning the first down. */
-      gl.uniform1f(U.uScale, 5.0 * dpr);
+      gl.uniform1f(U.uScale, 5.0 * dpr * (camZ / 3.35));
       gl.uniform2f(U.uLook, lookX, lookY);
       /* Published by js/annot.js as [[x, y, z, strength], ...] in model
          space. Padded to eight because gl.uniform3fv wants the whole array
@@ -1847,6 +1982,7 @@
       drawnLookX = lookX; drawnLookY = lookY;   // see makeProject()
       gl.uniform3f(U.uInk, 1.00, 1.00, 1.00);   // white on the dark ground
       gl.uniform3f(U.uInkDark, 0.03, 0.03, 0.03);  // black on the paper
+      gl.uniform1f(U.uDarkDim, darkDim);
       gl.uniform1f(U.uTear, window.OFF.has('tear') ? 0 : (state.tear || 0));
       gl.uniform1f(U.uTearRed, window.OFF.has('tear') ? 0 : (state.tearRed || 0));
       gl.uniform2f(U.uRes, canvas.width, canvas.height);

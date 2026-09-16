@@ -11,8 +11,8 @@ python tools/check.py     # must exit 0 before anything below
 
 ## 1 · Decisions to make before the repo is public
 
-- [ ] **Your email is in the page twice**, in plaintext: a `mailto:` in the
-      footer and `data-copy-email` on the bar button. Scrapers will find it.
+- [ ] **Your email is in the page once**, in plaintext: the `mailto:` in the
+      footer. Scrapers will find it.
       That is the price of being contactable and is usually worth paying —
       but decide it, don't discover it. Alternatives: a contact form
       (needs a backend), or an address you can abandon.

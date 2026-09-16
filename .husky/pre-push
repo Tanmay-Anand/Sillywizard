@@ -1,0 +1,4 @@
+# Nothing reaches the remote without the suite passing locally first - the
+# same checks CI runs, minus coverage. Skip in an emergency with --no-verify.
+npm test
+if command -v python >/dev/null 2>&1; then python tools/check.py; else python3 tools/check.py; fi

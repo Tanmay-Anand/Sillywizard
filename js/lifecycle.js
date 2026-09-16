@@ -36,6 +36,16 @@ window.PAGE = (function () {
       });
     },
 
+    /* Tear down just these modules. The phone uses it to hand a live build
+       that could not keep up back to the static one without a reload. */
+    unmountOnly: function (names) {
+      live = live.filter(function (l) {
+        if (names.indexOf(l.name) === -1) return true;
+        try { l.down(); } catch (e) { console.error('[unmount] ' + l.name, e); }
+        return false;
+      });
+    },
+
     unmount: function () {
       live.forEach(function (l) {
         try { l.down(); } catch (e) { console.error('[unmount] ' + l.name, e); }

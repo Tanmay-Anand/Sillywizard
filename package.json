@@ -1,0 +1,21 @@
+{
+  "name": "sillywizard",
+  "private": true,
+  "version": "1.0.0",
+  "description": "SILLYWIZARD - Tanmay Anand. A static site: no build step, no runtime dependencies.",
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:unit": "vitest run --project unit",
+    "test:integration": "vitest run --project integration",
+    "test:coverage": "vitest run --coverage",
+    "check": "python tools/check.py",
+    "prepare": "husky"
+  },
+  "devDependencies": {
+    "@vitest/coverage-v8": "^5.0.1",
+    "husky": "^9.1.7",
+    "jsdom": "^29.1.1",
+    "vitest": "^5.0.1"
+  }
+}

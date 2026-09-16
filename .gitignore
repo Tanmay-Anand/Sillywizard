@@ -1,6 +1,12 @@
-# Build scripts and the dev server. Nothing at runtime reads either.
-tools/
+# Build scripts and the dev server. Nothing at runtime reads either - except
+# check.py, which CI runs on every push, so it has to be in the repository.
+tools/*
+!tools/check.py
 serve.py
+
+# Test tooling
+node_modules/
+coverage/
 
 # Exploration renders: 2.3 MB of options we did not take.
 assets/options/
