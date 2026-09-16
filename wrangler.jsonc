@@ -1,0 +1,12 @@
+// Cloudflare Workers, static assets only: no Worker script, no build step.
+// "name" must match the project name in the Cloudflare dashboard, or the
+// deploy fails with a name-mismatch error.
+{
+  "name": "sillywizard",
+  "compatibility_date": "2025-09-01",
+  "assets": {
+    "directory": ".",
+    // Serves 404.html for unknown paths instead of Cloudflare's default page.
+    "not_found_handling": "404-page"
+  }
+}

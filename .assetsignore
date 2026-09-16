@@ -1,0 +1,15 @@
+# The whole repo root is the assets directory, so everything that is not the
+# site has to be excluded here or it becomes a public URL.
+.git
+.gitignore
+.gitattributes
+.assetsignore
+.claude
+wrangler.jsonc
+vercel.json
+*.md
+tools
+serve.py
+assets/options
+assets/ref/README.txt
+node_modules
