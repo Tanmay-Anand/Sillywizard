@@ -541,11 +541,21 @@ body.is-light .hud__mini{ filter:invert(1); }
   letter-spacing:var(--track-ui); text-transform:uppercase;
 }
 .rv__shot img{ display:block; width:100%; height:100%; object-fit:cover; }
+/* A phone capture is 9:20, not 16:10. Cropping one to fill the frame would
+   cut the screen in half, so a tall shot sits inside its frame instead. */
+.rv__shot--tall{ aspect-ratio:4 / 5; }
+.rv__shot--tall img{ object-fit:contain; }
 .rv__link{
   display:inline-block; margin-top:16px; text-decoration:none;
   font-family:var(--font-mono); font-size:var(--ui-10);
   letter-spacing:var(--track-ui); text-transform:uppercase;
+  /* The panel's copy of a card's link is a CLONE, so none of the selectors
+     that colour it in the card (.auto__out a, .pcard a) reach it. Without a
+     colour of its own it inherits one meant for a dark ground and vanishes
+     against the paper. */
+  color:var(--ink);
 }
+.rv__link:hover{ color:var(--red); }
 
 /* Texture, not information. Mirrored, tiny, half-faded, sitting on the
    cloud edge — a ghost of the word, not a second copy of it. */

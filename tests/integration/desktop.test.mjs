@@ -133,6 +133,34 @@ describe('project reveal (hover)', () => {
     expect(document.querySelector('.rv__close')).toBeNull();
   });
 
+  /* AUTOMATION runs the same reveal over the globe. The two panes share the
+     code and nothing else, which is the thing worth pinning down: a project
+     open in one must not disturb the other. */
+  it('builds a separate pair of layers inside each pane that asks for one', () => {
+    const hosts = [...document.querySelectorAll('[data-reveal-host]')];
+    expect(hosts.length).toBe(2);
+    hosts.forEach((h) => expect(h.querySelectorAll('.reveal')).toHaveLength(2));
+  });
+
+  it('opens an AUTOMATION callout inside the AUTOMATION pane', () => {
+    window.GOTO(3); frames(240);
+    const out = document.querySelector('.auto__out[data-reveal]');
+    mouse(out, 'pointerenter');
+    const open = document.querySelector('.reveal.is-open');
+    expect(open).not.toBeNull();
+    expect(open.closest('.pane--field')).not.toBeNull();
+    expect(open.querySelector('.rv__name').textContent).toBe(out.querySelector('b').textContent);
+    expect(open.querySelectorAll('.rv__shot img').length).toBeGreaterThanOrEqual(2);
+  });
+
+  it('leaves the other pane closed when one pane opens a project', () => {
+    window.GOTO(3); frames(240);
+    mouse(document.querySelector('.auto__out[data-reveal]'), 'pointerenter');
+    const dispersal = document.querySelector('.pane--dispersal [data-reveal-host]');
+    expect(dispersal.querySelector('.reveal.is-open')).toBeNull();
+    expect(document.querySelector('.pcard.is-active')).toBeNull();
+  });
+
   it('does not open for a phase that is not on screen', () => {
     window.GOTO(0);
     frames(240);

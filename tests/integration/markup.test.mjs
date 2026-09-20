@@ -144,14 +144,46 @@ describe('the leader lines and routes point at real coordinates', () => {
 });
 
 describe('projects', () => {
-  it('gives every revealable project a name and 2-4 image frames', () => {
+  const frames = (it) => {
+    const tpl = it.querySelector('template');
+    return tpl ? [...tpl.content.querySelectorAll('.rv__shot')] : [];
+  };
+
+  it('gives every revealable project a name', () => {
     const items = $$('[data-reveal]');
     expect(items.length).toBeGreaterThan(0);
-    items.forEach((it) => {
-      expect(it.querySelector('b').textContent.trim()).not.toBe('');
-      const shots = it.querySelector('template').content.querySelectorAll('.rv__shot');
-      expect(shots.length).toBeGreaterThanOrEqual(2);
-      expect(shots.length).toBeLessThanOrEqual(4);
+    items.forEach((it) => expect(it.querySelector('b').textContent.trim()).not.toBe(''));
+  });
+
+  /* Not every project has a running interface to photograph - a design
+     document has nothing to show. Those open with their sentence alone. The
+     rule is about what a frame MEANS: if one is there, it holds a capture. */
+  it('gives a project with captures 2-4 frames, and each carries a real image', () => {
+    const shown = $$('[data-reveal]').filter((it) => frames(it).length);
+    expect(shown.length).toBeGreaterThan(0);
+    shown.forEach((it) => {
+      const shots = frames(it);
+      const name = it.querySelector('b').textContent.trim();
+      expect(shots.length, name).toBeGreaterThanOrEqual(2);
+      expect(shots.length, name).toBeLessThanOrEqual(4);
+      shots.forEach((sh) => {
+        const img = sh.querySelector('img');
+        expect(img, name).not.toBeNull();
+        expect(sh.classList.contains('slot'), name).toBe(false);
+        expect(existsSync(img.getAttribute('src')), img.getAttribute('src')).toBe(true);
+        expect(img.getAttribute('alt').trim(), name).not.toBe('');
+        /* Reserved geometry, so opening a panel does not reflow it. */
+        expect(Number(img.getAttribute('width')), name).toBeGreaterThan(0);
+        expect(Number(img.getAttribute('height')), name).toBeGreaterThan(0);
+      });
+    });
+  });
+
+  it('never leaves an empty frame standing in for a missing capture', () => {
+    $$('.rv__shot').concat(
+      $$('[data-reveal]').flatMap(frames),
+    ).forEach((sh) => {
+      if (!sh.querySelector('img')) expect(sh.classList.contains('slot')).toBe(true);
     });
   });
 
