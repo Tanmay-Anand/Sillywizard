@@ -174,6 +174,10 @@ window.PAGE.register('mstage', function (scope) {
     set('phase', cur, function (v) {
       if (readPhase) readPhase.textContent = NAMES[v] || '--';
       btns.forEach(function (btn, j) { btn.classList.toggle('is-on', j === v); });
+      /* AUTOMATION (index 3) has the cloud fully overlapping its text, so the
+         whole canvas should be blurred there. EXPERIMENTS (index 4) keeps its
+         open-band cloud sharp; only the text containers get backdrop-filter. */
+      document.body.classList.toggle('is-phase-field', v === 3);
     });
 
     /* background words: same falloff as desktop (js/scroll.js), and they
