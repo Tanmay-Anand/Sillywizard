@@ -395,23 +395,21 @@
              its description alone rather than a placeholder frame. -->
         <div class="reveal-host" data-reveal-host aria-hidden="true"></div>
 
-        <!-- EVERY PROJECT IN ONE COLUMN, down the right gutter. Name, one
-             sentence, a way in - and nothing else. The index numbers went:
-             they ranked projects the visitor has no reason to read in order,
-             and they were the first thing the eye hit in each card.
+        <!-- SIX PROJECTS, SIX IDENTICAL CARDS: three down the right gutter,
+             three along the bottom band. Name, one sentence, a way in — and
+             nothing else. The index numbers went: they ranked projects the
+             visitor has no reason to read in order, and they were the first
+             thing the eye hit in each card.
 
-             The three lighter entries at the end used to sit in a row along
-             the bottom of the screen, which split one list into two places
-             and implied a distinction between them that does not exist. They
-             are all projects; the weight difference already says which ones
-             carry the section.
-
-             Six entries do not fit the gutter, so the column is a window and
-             the strip inside it rolls: move the pointer down the right-hand
-             side and the list tracks it. js/roll.js, which does nothing at
-             all when the content already fits. -->
-        <div class="disp__feat" data-roll>
-        <div class="disp__strip" data-roll-strip>
+             They were briefly one scrolling column, which was worse in two
+             ways at once. A card sliced by the window's edge reads as a
+             rendering fault rather than as a hint that the list continues;
+             and hovering a card already opens its panel, so a column that
+             ALSO tracked the pointer meant the card under the cursor kept
+             changing while the panel flickered between projects. Two
+             behaviours competing for one gesture. Two bands of three need no
+             gesture at all. -->
+        <div class="disp__feat">
           <article class="pcard" data-reveal tabindex="0">
             <b>Praxis Chess</b>
             <span>Reads finished games, names the recurring weakness, drills it back.</span>
@@ -454,40 +452,47 @@
             </div>
             </template>
           </article>
+        </div>
 
-          <!-- Everything else, lighter: an index, not a shelf. Same column,
-               same roll, half the weight. -->
-          <article class="pslot" data-reveal tabindex="0"><b>Vantix</b>
+        <!-- The other three, along the bottom band — the only strip on this
+             screen with no chrome in it. Same card, same size, same weight:
+             the split here is where they sit, not how much they count. -->
+        <div class="disp__slots">
+          <article class="pcard" data-reveal tabindex="0">
+            <b>Vantix</b>
+            <span>One schema file becomes the entities, the migrations and the queries.</span>
+            <a href="https://github.com/Tanmay-Anand/Vantix" target="_blank" rel="noopener"
+               data-scramble><span data-label>view project</span> <i>&rarr;</i></a>
             <template>
               <p class="rv__desc">One schema file for a Spring Boot app: entities, Flyway migrations
                 and a type-safe query metamodel generated from it, on top of Hibernate rather than
                 instead of it.</p>
-              <a class="rv__link" href="https://github.com/Tanmay-Anand/Vantix" target="_blank"
-                 rel="noopener" tabindex="-1">view project &rarr;</a>
             </template>
           </article>
-          <article class="pslot" data-reveal tabindex="0"><b>GoblinKit</b>
+          <article class="pcard" data-reveal tabindex="0">
+            <b>GoblinKit</b>
+            <span>A workflow engine whose scheduler decides and never acts.</span>
+            <s class="slot">v1 built &rarr; // no public repo yet</s>
             <template>
-              <p class="rv__desc">A workflow engine whose scheduler decides and never acts. v1 runs
-                branching, loops, retries and waits from the command line; the editor and the
-                queue are still design.</p>
+              <p class="rv__desc">v1 runs branching, loops, retries and waits from the command
+                line. The editor and the queue are still design.</p>
             <div class="rv__shots">
               <div class="rv__shot"><img src="assets/shots/goblinkit-run.webp" width="1920" height="1200"
                    loading="lazy" decoding="async" alt="One workflow run: a branch taken, the other skipped, a merge, and a loop whose two passes are addressed separately."></div>
               <div class="rv__shot"><img src="assets/shots/goblinkit-replay.webp" width="1920" height="1200"
                    loading="lazy" decoding="async" alt="A run replayed: 32 journal entries folded back into the state the run ended in."></div>
             </div>
-              <s class="slot rv__link">v1 built &rarr; // no public repo yet</s>
             </template>
           </article>
-          <article class="pslot" data-reveal tabindex="0"><b>Gremlin</b>
+          <article class="pcard" data-reveal tabindex="0">
+            <b>Gremlin</b>
+            <span>Encrypted dumps encoded as video noise, parked on an unlisted channel.</span>
+            <s class="slot">design only &rarr; // no public repo yet</s>
             <template>
               <p class="rv__desc">Encrypted database dumps, encoded as video noise and parked on an
                 unlisted channel. An experiment in how far a storage medium can be misused.</p>
-              <s class="slot rv__link">design only &rarr; // no public repo yet</s>
             </template>
           </article>
-        </div>
         </div>
       </section>
 
@@ -565,7 +570,7 @@
   var mobile = document.documentElement.classList.contains('is-mobile');
   var list = ['lifecycle', 'isolate', 'dormancy', 'hud', 'a11y', 'fps']
     .concat(mobile ? ['reveal', 'phonemath', 'mobile', 'mpager']
-                   : ['tearfn', 'face', 'substrate', 'tear', 'scroll', 'annot', 'reveal', 'roll', 'loader'])
+                   : ['tearfn', 'face', 'substrate', 'tear', 'scroll', 'annot', 'reveal', 'loader'])
     .concat(['boot']);
   for (var i = 0; i < list.length; i++) {
     var s = document.createElement('script');

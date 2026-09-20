@@ -58,7 +58,7 @@
      small — it is meant to be — but it is a size a person reads rather than
      decodes. The genuinely tiny things (the bar, the readout, the phase
      indices) keep 10px, because those ARE telemetry. */
-  .frag, .pslot span{
+  .frag{
     font-size:13px; line-height:1.75;
   }
 
@@ -277,16 +277,21 @@
   }
   .disp__feat::-webkit-scrollbar{ display:none; }
   .disp__feat .pcard{ flex:0 0 78%; scroll-snap-align:start; scroll-margin-left:22px; }
-  /* The roll strip is a desktop mechanism. Here its children have to BE the
-     flex items of the swipe row, so the wrapper stops generating a box. */
-  .disp__strip{ display:contents; }
-  .disp__feat .pslot{ flex:0 0 52%; scroll-snap-align:start; scroll-margin-left:22px; }
   .pcard span{ font-size:13px; line-height:1.7; }
 
   /* ---- dispersal: the fragments become a stack -------------------------- */
   .pane--dispersal{ display:block; }
   .frag{ position:static !important; transform:none !important;
          margin:0 0 18px; max-width:none; }
+  /* The bottom band has no meaning on a phone: it becomes a second swipe row
+     under the first, with the same card at the same width. */
+  .disp__slots{
+    position:static; transform:none; display:flex; grid-template-columns:none;
+    overflow-x:auto; scroll-snap-type:x mandatory; gap:12px;
+    margin:12px -22px 0; padding:0 22px 6px; scrollbar-width:none;
+  }
+  .disp__slots::-webkit-scrollbar{ display:none; }
+  .disp__slots .pcard{ flex:0 0 78%; scroll-snap-align:start; scroll-margin-left:22px; }
 
   /* ---- footer -----------------------------------------------------------
      IT HAS TO PAINT ITS OWN RED, and this was the worst bug on the phone.

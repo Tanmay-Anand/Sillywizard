@@ -410,33 +410,19 @@ body.is-light .hud__mini{ filter:invert(1); }
 
    Top at 23% clears .hud__read, which reaches about 21% of the viewport,
    and the stack ends well above .hud__prog. */
-/* THE COLUMN IS A WINDOW, and the strip inside it rolls.
+/* Three down the right gutter. The other three are in the bottom band, and
+   they are the SAME CARD at the same size: the split is where they sit, not
+   how much they count.
 
-   Six entries do not fit the gutter on any laptop, and the two ways out of
-   that are both worse than this one: a scrollbar in the middle of a
-   composition with no other scrollbars anywhere, or cutting the list down to
-   whatever happens to fit, which is a design deciding what a visitor is
-   allowed to see. The window is bounded by the chrome above and below it —
-   the map and readout at the top, the scroll readout at the bottom — so the
-   list never runs under an instrument. */
+   This was briefly one scrolling column of six, which failed in two ways at
+   once. A card sliced by the window's edge reads as a rendering fault rather
+   than as a hint that the list continues; and hovering a card already opens
+   its panel, so a column that also tracked the pointer meant the card under
+   the cursor kept changing while the panel flickered between projects. Two
+   bands of three need no gesture at all. */
 .disp__feat{
   position:absolute; right:var(--disp-side); top:23%;
-  bottom:var(--chrome-b);
-  width:min(300px, 26vw);
-  overflow:hidden;
-}
-.disp__strip{
-  display:flex; flex-direction:column; gap:14px;
-  transform:translateY(var(--roll, 0px));
-  /* Long and soft: the list is following a pointer, not answering a click,
-     and a fast transition makes that read as a twitch. */
-  transition:transform 520ms cubic-bezier(.22,.61,.36,1);
-  will-change:transform;
-}
-/* Someone who has asked for less movement still gets the whole list — it
-   just arrives instead of travelling. */
-@media (prefers-reduced-motion:reduce){
-  .disp__strip{ transition:none; }
+  width:min(300px, 26vw); display:flex; flex-direction:column; gap:14px;
 }
 .pcard{
   border:1px solid var(--line); padding:12px 14px;
@@ -461,8 +447,6 @@ body.is-light .hud__mini{ filter:invert(1); }
 .pcard:hover{ border-color:var(--red-ghost); }
 /* The project whose panel is open. */
 .pcard.is-active{ border-color:var(--red); }
-.pslot.is-active{ border-style:solid; border-color:var(--red); }
-.pane.is-live .pslot{ pointer-events:auto; }
 
 /* ---- THE REVEAL -------------------------------------------------------------
    A project surfaces OVER the particle field through a soft wave. See
@@ -598,18 +582,39 @@ body.is-light .hud__mini{ filter:invert(1); }
    judged now rather than after the copy lands. */
 /* Everything beyond the three. Deliberately half the weight of a .pcard —
    these are an index, not a shelf. */
-/* The lighter entries sit in the same column as the cards now. They used to
-   be a row along the bottom band, which split one list across two places and
-   implied a distinction between them that does not exist: they are all
-   projects, and the weight difference already says which three carry the
-   section. */
-.pslot{
-  border:1px dashed var(--red-ghost); padding:8px 10px;
-  font-family:var(--font-mono); font-size:var(--ui-10);
-  letter-spacing:var(--track-ui); text-transform:uppercase; line-height:1.7;
+/* THE BOTTOM BAND. Three more of the same card, centred along the only strip
+   on this screen with no chrome in it: the log stops at 23% and the scroll
+   readout sits to the right of this row, not across it.
+
+   Each column is the width of a gutter card, so all six read as one set seen
+   in two places rather than as a shelf and an index. It is anchored to the
+   bottom chrome rather than to a percentage, because a percentage that clears
+   the bar at 900px tall runs under it at 720. */
+/* SHORT SCREENS GET A TIGHTER CARD — the same tighter card, all six of them.
+   On a 720p laptop the right column and the bottom band are at the same
+   height, so unless the column ends before the row begins the two collide.
+   Trimming every card equally keeps the set identical, which is the whole
+   point of the two bands; trimming only the bottom three would make them a
+   lesser thing again. */
+@media (max-height: 820px){
+  .pcard{ padding:9px 12px; line-height:1.55; }
+  .pcard span{ margin-top:4px; line-height:1.45; }
+  .pcard a, .pcard s{ margin-top:6px; }
+  /* Both numbers are measured, not chosen. At 1280x720 they leave 16px
+     between the column's last card and the row's first, and keep the column
+     clear of the readout in the top-right corner. */
+  .disp__feat{ gap:10px; top:17%; }
+  .disp__slots{ gap:10px; bottom:calc(var(--chrome-b) - 53px); }
 }
-.pslot b{ display:block; font-weight:400; color:var(--ink); }
-.pslot span{ display:block; color:var(--label); margin-top:4px; }
+
+.disp__slots{
+  position:absolute; left:50%; transform:translateX(-50%);
+  /* Measured against the instruments rather than guessed: the scroll readout
+     occupies 831–846 on a 900-tall screen and the bar the last 28px, so the
+     row ends at 100px up and clears both with room to spare. */
+  bottom:calc(var(--chrome-b) - 45px);
+  display:grid; grid-template-columns:repeat(3, min(300px, 26vw)); gap:14px;
+}
 
 /* Placeholder copy is marked in the DESIGN, not just the source, so an
    unfilled slot cannot ship by accident. */
