@@ -410,9 +410,33 @@ body.is-light .hud__mini{ filter:invert(1); }
 
    Top at 23% clears .hud__read, which reaches about 21% of the viewport,
    and the stack ends well above .hud__prog. */
+/* THE COLUMN IS A WINDOW, and the strip inside it rolls.
+
+   Six entries do not fit the gutter on any laptop, and the two ways out of
+   that are both worse than this one: a scrollbar in the middle of a
+   composition with no other scrollbars anywhere, or cutting the list down to
+   whatever happens to fit, which is a design deciding what a visitor is
+   allowed to see. The window is bounded by the chrome above and below it —
+   the map and readout at the top, the scroll readout at the bottom — so the
+   list never runs under an instrument. */
 .disp__feat{
   position:absolute; right:var(--disp-side); top:23%;
-  width:min(300px, 26vw); display:flex; flex-direction:column; gap:14px;
+  bottom:var(--chrome-b);
+  width:min(300px, 26vw);
+  overflow:hidden;
+}
+.disp__strip{
+  display:flex; flex-direction:column; gap:14px;
+  transform:translateY(var(--roll, 0px));
+  /* Long and soft: the list is following a pointer, not answering a click,
+     and a fast transition makes that read as a twitch. */
+  transition:transform 520ms cubic-bezier(.22,.61,.36,1);
+  will-change:transform;
+}
+/* Someone who has asked for less movement still gets the whole list — it
+   just arrives instead of travelling. */
+@media (prefers-reduced-motion:reduce){
+  .disp__strip{ transition:none; }
 }
 .pcard{
   border:1px solid var(--line); padding:12px 14px;
@@ -574,10 +598,11 @@ body.is-light .hud__mini{ filter:invert(1); }
    judged now rather than after the copy lands. */
 /* Everything beyond the three. Deliberately half the weight of a .pcard —
    these are an index, not a shelf. */
-.disp__slots{
-  position:absolute; left:50%; transform:translateX(-50%); bottom:7%;
-  display:grid; grid-template-columns:repeat(3, minmax(120px, 165px)); gap:14px;
-}
+/* The lighter entries sit in the same column as the cards now. They used to
+   be a row along the bottom band, which split one list across two places and
+   implied a distinction between them that does not exist: they are all
+   projects, and the weight difference already says which three carry the
+   section. */
 .pslot{
   border:1px dashed var(--red-ghost); padding:8px 10px;
   font-family:var(--font-mono); font-size:var(--ui-10);

@@ -10,6 +10,11 @@ an Android emulator.
 its own components, its own CSS and its own charts. Nothing is drawn, mocked up
 or retouched.
 
+The two GoblinKit frames are the exception worth stating plainly: it is a
+command-line tool with no interface to photograph, so `tools/make-shots.py` in
+that repository *renders* its output into a terminal frame. The characters are
+the verbatim output of the commands shown; the window around them is drawn.
+
 **Not real:** the data inside them. Each was run against stand-in data supplied
 only for the capture and removed afterwards, because the alternative is worse in
 both directions — an empty app argues for nothing, and a full one would put a
@@ -27,6 +32,8 @@ real network, a real training log or a real workbook on a public page.
 | `forte-history.webp` | Forte | Every finished session with its duration, set count and volume | same |
 | `sheaf-plan.webp` | Sheaf | A question compiled into a typed plan you can read before it runs | a stand-in plan response, supplied to the task pane by the capture script |
 | `sheaf-ask.webp` | Sheaf | The task pane with a question typed and not yet planned | same |
+| `goblinkit-run.webp` | GoblinKit | One workflow run: a branch taken, the other skipped, a merge, and a loop addressed per pass | the repository's own `examples/order-triage.json`, run with an invented order |
+| `goblinkit-replay.webp` | GoblinKit | The same run replayed out of its journal | same |
 
 ## Projects with no capture here
 
@@ -36,7 +43,6 @@ they carry their description alone rather than an empty frame:
 | project | why |
 |---|---|
 | **Vantix** | The CLI and Studio are scaffolding — `vantix` prints its usage and the Studio boots an empty context. A screenshot would be a help message. |
-| **GoblinKit** | Design documents only; the README says implementation has not started. |
 | **Gremlin** | Planning documents only — "no code until milestones are approved". |
 
 ## Format

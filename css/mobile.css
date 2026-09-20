@@ -277,16 +277,16 @@
   }
   .disp__feat::-webkit-scrollbar{ display:none; }
   .disp__feat .pcard{ flex:0 0 78%; scroll-snap-align:start; scroll-margin-left:22px; }
+  /* The roll strip is a desktop mechanism. Here its children have to BE the
+     flex items of the swipe row, so the wrapper stops generating a box. */
+  .disp__strip{ display:contents; }
+  .disp__feat .pslot{ flex:0 0 52%; scroll-snap-align:start; scroll-margin-left:22px; }
   .pcard span{ font-size:13px; line-height:1.7; }
 
   /* ---- dispersal: the fragments become a stack -------------------------- */
   .pane--dispersal{ display:block; }
   .frag{ position:static !important; transform:none !important;
          margin:0 0 18px; max-width:none; }
-  .disp__slots{
-    position:static; transform:none; grid-template-columns:1fr; gap:12px;
-    margin-top:8px;
-  }
 
   /* ---- footer -----------------------------------------------------------
      IT HAS TO PAINT ITS OWN RED, and this was the worst bug on the phone.
