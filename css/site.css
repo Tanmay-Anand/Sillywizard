@@ -604,8 +604,23 @@ body.is-light .hud__mini{ filter:invert(1); }
      between the column's last card and the row's first, and keep the column
      clear of the readout in the top-right corner. */
   .disp__feat{ gap:10px; top:17%; }
-  .disp__slots{ gap:10px; bottom:calc(var(--chrome-b) - 53px); }
+  .disp__slots{ gap:8px; bottom:calc(var(--chrome-b) - 53px); }
 }
+
+/* THE BOTTOM ROW RUNS AT 0.8. Every metric of the card, not just its width:
+   width, padding, both type sizes and the gap between them. Scaling only the
+   width would have made each card TALLER as its sentence wrapped, which is
+   the opposite of what "smaller" means here.
+
+   The size is what keeps the row inside its band. At full size the three of
+   them spanned 928px, which on a wide-but-short window put the last card
+   under the right-hand column and brought the first one up against the
+   statement; at 0.8 the row is 742px and clears both. */
+.disp__slots .pcard{ padding:10px 11px; }
+.disp__slots .pcard b{ font-size:10.5px; }
+.disp__slots .pcard span{ font-size:9px; margin-top:5px; }
+.disp__slots .pcard a,
+.disp__slots .pcard s{ font-size:calc(var(--ui-10) * .8); margin-top:7px; }
 
 .disp__slots{
   position:absolute; left:50%; transform:translateX(-50%);
@@ -613,7 +628,7 @@ body.is-light .hud__mini{ filter:invert(1); }
      occupies 831–846 on a 900-tall screen and the bar the last 28px, so the
      row ends at 100px up and clears both with room to spare. */
   bottom:calc(var(--chrome-b) - 45px);
-  display:grid; grid-template-columns:repeat(3, min(300px, 26vw)); gap:14px;
+  display:grid; grid-template-columns:repeat(3, min(240px, 21vw)); gap:11px;
 }
 
 /* Placeholder copy is marked in the DESIGN, not just the source, so an
