@@ -102,12 +102,12 @@ describe('the bar', () => {
     expect(last.getAttribute('href')).toBe(GITHUB);
     expect(last.target).toBe('_blank');
     expect(last.rel).toContain('noopener');
-    expect(text(last.querySelector('[data-label]'))).toBe('open my git profile');
+    expect(text(last.querySelector('[data-label]'))).toBe('github');
   });
 
   it('still has an accessible name where the phone hides the label', () => {
     // contains the visible words, so voice control ("click open my git profile") still works
-    expect(document.querySelector('.bar__git').getAttribute('aria-label')).toBe('Open my git profile on GitHub');
+    expect(document.querySelector('.bar__git').getAttribute('aria-label')).toBe('Open my GitHub profile');
   });
 
   it('no longer offers to copy the email address', () => {

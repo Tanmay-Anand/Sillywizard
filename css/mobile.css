@@ -371,13 +371,15 @@
   }
   .bar__left::-webkit-scrollbar{ display:none; }
   .bar__btn{ flex:0 0 auto; }
-  .bar__zone{ display:none; }             /* the top readout already says GMT+5:30 */
-  .bar__clock{ flex:0 0 auto; margin-left:10px; }
-  /* The label stays: a lone "+" was fine as a copy button with an obvious
-     job, but it is no way to say "your GitHub profile". The phase list is a
-     horizontal scroller, so it gives the width up. Hidden entirely at 420px
-     and below (see the narrower query), where it never fitted. */
+  .bar__zone{ display:none; }
+  /* Clock is already in the OS status bar and in .m-read above. Hiding it
+     on all mobile frees room so every phase name fits without scrolling. */
+  .bar__clock{ display:none; }
   .bar__git{ flex:0 0 auto; white-space:nowrap; }
+  /* Remove the "+" decoration on all mobile — it costs width every phase
+     needs, and the buttons are clearly tappable without it. */
+  .bar__btn i{ display:none; }
+  .bar__btn{ padding:0 5px; }
   body{ padding-bottom:calc(60px + env(safe-area-inset-bottom, 0px)); }
 
   /* ---- a small live readout, since the HUD is gone ---------------------- */
@@ -422,13 +424,10 @@
    Above 420px there is room for all three, so both come back.
    ========================================================================= */
 @media (max-width: 420px) {
-  .bar__clock, .bar__git{ display:none; }
+  /* Clock and "+" icons are already gone at all mobile widths (760px block
+     above). At this narrowest step only the git link is dropped too. */
+  .bar__git{ display:none; }
   .bar__left{ flex:1 1 100%; }
-  /* The phase names went from SOLID/MESH/SWARM to INVISIBLE/UNDERNEATH/
-     UNATTENDED, which is roughly 500px of type in a 355px strip. The "+"
-     after each one is decoration and the first thing that can go. */
-  .bar__btn i{ display:none; }
-  .bar__btn{ padding:0 5px; }
 }
 
 
