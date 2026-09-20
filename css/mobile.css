@@ -469,15 +469,17 @@
   .m-live{ --m-obj-a:.58; }
   .m-live .sub{ z-index:1; opacity:0; transition:opacity 600ms linear; }
   .m-live.m-ready .sub{ opacity:1; }
-  /* On light phases the particles turn to ink-on-paper and overlap the text.
-     backdrop-filter on the CONTENT CHILDREN (not the canvas, not the pane)
-     blurs only the region where each element sits — the open band above the
-     text stays sharp. The three-layer text-shadow is a fallback for browsers
-     that do not support backdrop-filter. */
-  .m-live body.is-light .pane > *{
+  /* On light phases the particles turn to ink-on-paper and can overlap text.
+     backdrop-filter on the TEXT CONTAINERS ONLY blurs the canvas behind
+     each element's bounding box.
+     WHY NOT .pane > *: .reveal-host is a direct child of every pane but
+     it is position:fixed;inset:0 — giving it backdrop-filter blurs the
+     entire screen. Only the real text blocks are listed here. */
+  .m-live body.is-light .lede,
+  .m-live body.is-light .auto,
+  .m-live body.is-light .frag:not(.frag--echo){
     backdrop-filter:blur(5px);
     -webkit-backdrop-filter:blur(5px);
-    text-shadow:0 0 14px var(--ground), 0 0 4px var(--ground);
   }
 
   /* THE POSTER, where the live object will appear, until it has drawn.
