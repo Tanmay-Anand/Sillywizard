@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { bootSite, frames } from '../helpers/boot.mjs';
+import { read } from '../helpers/site.mjs';
 
 /* THE PROJECT CARDS IN 05, IN TWO BANDS OF THREE.
  *
@@ -58,6 +59,29 @@ describe('the project bands', () => {
     const goblin = cards('.disp__slots').find((c) => nameOf(c) === 'GoblinKit');
     expect(goblin.querySelector('a')).toBeNull();
     expect(goblin.querySelector('s.slot').textContent).toMatch(/no public repo/i);
+  });
+});
+
+describe('reading a card over the particle field', () => {
+  /* The field is 40,000 points and the cards sit on top of it. They already
+     paint above it — .stage is z-index 20, .sub is 1 — so the failure mode is
+     not stacking but transparency: a card with no background lets the points
+     through and the text is read against moving noise.
+
+     Asserted against the stylesheet text because jsdom has no cascade for an
+     external sheet, and the alternative is discovering it from a screenshot
+     again. */
+  const css = read('css/site.css');
+
+  it('gives the card a ground of its own', () => {
+    const rule = /\.pcard\{[^}]*\}/.exec(css)[0];
+    expect(rule).toMatch(/background:\s*color-mix\(in srgb, var\(--ground\)/);
+  });
+
+  it('keeps the field below the stage rather than above it', () => {
+    const sub = /\.sub\{[^}]*z-index:\s*(\d+)/.exec(css)[1];
+    const stage = /\.stage\{[^}]*z-index:\s*(\d+)/.exec(css)[1];
+    expect(Number(stage)).toBeGreaterThan(Number(sub));
   });
 });
 

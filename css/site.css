@@ -426,6 +426,14 @@ body.is-light .hud__mini{ filter:invert(1); }
 }
 .pcard{
   border:1px solid var(--line); padding:12px 14px;
+  /* THE CARD NEEDS A GROUND, and the reason is worth stating because the
+     obvious diagnosis is wrong. The cards already paint above the particle
+     field: .stage is z-index 20, .sub is 1. What made the field look like it
+     was ON TOP of them was that they had no background, so 40,000 points
+     showed THROUGH a transparent box and the text was read against moving
+     noise. Near-opaque paper, the same treatment .reveal__panel uses for the
+     same reason: the field shows around a card, not through it. */
+  background:color-mix(in srgb, var(--ground) 94%, transparent);
   font-family:var(--font-mono); font-size:var(--ui-10);
   letter-spacing:var(--track-ui); text-transform:uppercase; line-height:1.7;
   /* THE ONE PLACE ON THE PAGE A VISITOR CAN CLICK INSIDE A PHASE.
