@@ -469,13 +469,15 @@
   .m-live{ --m-obj-a:.58; }
   .m-live .sub{ z-index:1; opacity:0; transition:opacity 600ms linear; }
   .m-live.m-ready .sub{ opacity:1; }
-  /* On light phases the particles turn to ink. A filter:blur() on the canvas
-     blurs the WHOLE cloud — including the part that sits in the open band
-     above the text, which reads as a defect rather than a readability aid.
-     Instead, a stronger ground halo on the text itself keeps letters legible
-     against the point cloud without touching the cloud at all. */
-  .m-live body.is-light .pane{
-    text-shadow:0 0 18px var(--ground), 0 0 9px var(--ground), 0 0 3px var(--ground);
+  /* On light phases the particles turn to ink-on-paper and overlap the text.
+     backdrop-filter on the CONTENT CHILDREN (not the canvas, not the pane)
+     blurs only the region where each element sits — the open band above the
+     text stays sharp. The three-layer text-shadow is a fallback for browsers
+     that do not support backdrop-filter. */
+  .m-live body.is-light .pane > *{
+    backdrop-filter:blur(5px);
+    -webkit-backdrop-filter:blur(5px);
+    text-shadow:0 0 14px var(--ground), 0 0 4px var(--ground);
   }
 
   /* THE POSTER, where the live object will appear, until it has drawn.
