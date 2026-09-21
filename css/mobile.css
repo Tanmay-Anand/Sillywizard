@@ -58,7 +58,7 @@
      small — it is meant to be — but it is a size a person reads rather than
      decodes. The genuinely tiny things (the bar, the readout, the phase
      indices) keep 10px, because those ARE telemetry. */
-  .frag, .pslot span{
+  .frag{
     font-size:13px; line-height:1.75;
   }
 
@@ -268,25 +268,26 @@
     position:static; width:auto; margin:26px 0 0; gap:12px;
   }
   .pcard{ pointer-events:auto; }
-  /* A row you swipe, not three full-width boxes you scroll past. The row
-     bleeds to the screen edges so a card visibly continues off the right. */
+  /* Vertical stack — no swipe row. Each card is full width and readable
+     without peeking at an overflow edge. */
   .disp__feat{
-    flex-direction:row; overflow-x:auto; scroll-snap-type:x mandatory;
-    margin-left:-22px; margin-right:-22px; padding:0 22px 6px;
-    scrollbar-width:none;
+    flex-direction:column; overflow:visible;
+    margin-left:0; margin-right:0; padding:0;
   }
-  .disp__feat::-webkit-scrollbar{ display:none; }
-  .disp__feat .pcard{ flex:0 0 78%; scroll-snap-align:start; scroll-margin-left:22px; }
+  .disp__feat .pcard{ flex:0 0 auto; width:100%; }
   .pcard span{ font-size:13px; line-height:1.7; }
 
   /* ---- dispersal: the fragments become a stack -------------------------- */
   .pane--dispersal{ display:block; }
   .frag{ position:static !important; transform:none !important;
          margin:0 0 18px; max-width:none; }
+  /* Same vertical-stack treatment as .disp__feat above. */
   .disp__slots{
-    position:static; transform:none; grid-template-columns:1fr; gap:12px;
-    margin-top:8px;
+    position:static; transform:none; display:flex; flex-direction:column;
+    grid-template-columns:none; overflow:visible;
+    gap:12px; margin:12px 0 0; padding:0;
   }
+  .disp__slots .pcard{ flex:0 0 auto; width:100%; }
 
   /* ---- footer -----------------------------------------------------------
      IT HAS TO PAINT ITS OWN RED, and this was the worst bug on the phone.
@@ -370,13 +371,15 @@
   }
   .bar__left::-webkit-scrollbar{ display:none; }
   .bar__btn{ flex:0 0 auto; }
-  .bar__zone{ display:none; }             /* the top readout already says GMT+5:30 */
-  .bar__clock{ flex:0 0 auto; margin-left:10px; }
-  /* The label stays: a lone "+" was fine as a copy button with an obvious
-     job, but it is no way to say "your GitHub profile". The phase list is a
-     horizontal scroller, so it gives the width up. Hidden entirely at 420px
-     and below (see the narrower query), where it never fitted. */
+  .bar__zone{ display:none; }
+  /* Clock is already in the OS status bar and in .m-read above. Hiding it
+     on all mobile frees room so every phase name fits without scrolling. */
+  .bar__clock{ display:none; }
   .bar__git{ flex:0 0 auto; white-space:nowrap; }
+  /* Remove the "+" decoration on all mobile — it costs width every phase
+     needs, and the buttons are clearly tappable without it. */
+  .bar__btn i{ display:none; }
+  .bar__btn{ padding:0 5px; }
   body{ padding-bottom:calc(60px + env(safe-area-inset-bottom, 0px)); }
 
   /* ---- a small live readout, since the HUD is gone ---------------------- */
@@ -391,6 +394,9 @@
   }
   body.is-light .m-read{ background:rgba(241,241,237,.85); }
   .m-read b{ font-weight:400; color:var(--red); }
+  /* Timer takes up half the bar for something the user can see in their OS
+     status bar. Hide it; the name + phase is enough. */
+  .m-read span:last-child{ display:none; }
 }
 
 /* Everything above is phone-only; this keeps the two mobile-only elements
@@ -418,13 +424,10 @@
    Above 420px there is room for all three, so both come back.
    ========================================================================= */
 @media (max-width: 420px) {
-  .bar__clock, .bar__git{ display:none; }
+  /* Clock and "+" icons are already gone at all mobile widths (760px block
+     above). At this narrowest step only the git link is dropped too. */
+  .bar__git{ display:none; }
   .bar__left{ flex:1 1 100%; }
-  /* The phase names went from SOLID/MESH/SWARM to INVISIBLE/UNDERNEATH/
-     UNATTENDED, which is roughly 500px of type in a 355px strip. The "+"
-     after each one is decoration and the first thing that can go. */
-  .bar__btn i{ display:none; }
-  .bar__btn{ padding:0 5px; }
 }
 
 
@@ -466,6 +469,22 @@
   .m-live{ --m-obj-a:.58; }
   .m-live .sub{ z-index:1; opacity:0; transition:opacity 600ms linear; }
   .m-live.m-ready .sub{ opacity:1; }
+  /* AUTOMATION: cloud fills the entire frame and overlaps all text.
+     Blur the whole canvas so nothing competes with the words.
+     is-field-blur is toggled by js/mstage.js once the AUTOMATION text has
+     risen above the cloud band's bottom edge. */
+  .m-live body.is-field-blur .sub{
+    filter:blur(5px);
+    transition:filter 320ms linear;
+  }
+  /* EXPERIMENTS: cloud sits in its own open band above the text.
+     Blur only behind the text containers so the band stays sharp. */
+  .m-live body.is-light:not(.is-field-blur) .lede,
+  .m-live body.is-light:not(.is-field-blur) .auto,
+  .m-live body.is-light:not(.is-field-blur) .frag:not(.frag--echo){
+    backdrop-filter:blur(5px);
+    -webkit-backdrop-filter:blur(5px);
+  }
 
   /* THE POSTER, where the live object will appear, until it has drawn.
      Sized from the bust INSIDE the image, not the image: the render is
@@ -475,8 +494,11 @@
      is a change of material rather than a jump. */
   .m-live .m-bust{
     z-index:1; top:6.2lvh; height:45.2lvh; background-color:transparent;
-    opacity:var(--m-obj-a);            /* same brightness as what replaces it */
-    transition:opacity 600ms linear;
+    /* The canvas IS the subject on this build. Starting the poster at
+       full strength then fading it to match the sparser particle render
+       looks like a density reduction. Start hidden; the canvas fades in. */
+    opacity:0;
+    transition:none;
   }
   .m-live .m-bust::after{ display:none; }
   .m-live.m-ready .m-bust{ opacity:0; }

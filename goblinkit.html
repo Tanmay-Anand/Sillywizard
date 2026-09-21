@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>GoblinKit — Workflow Editor</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0c0c0c;--surface:#141414;--surface2:#1c1c1c;--border:#252525;
+  --text:#d4d4d4;--dim:#4e4e4e;
+  --accent:#5cd47a;--accent2:#3db860;
+  --c-trigger:#5cd47a;--c-task:#5899d4;--c-branch:#d4a84e;
+  --c-loop:#a85cd4;--c-retry:#d4685c;--c-wait:#5cd4cc;--c-end:#3a3a3a;
+  --port-in:#5899d4;--port-out:#5cd47a;
+}
+body{font-family:'Cascadia Code','SF Mono','Fira Code',Menlo,monospace;font-size:12px;
+  background:var(--bg);color:var(--text);height:100vh;overflow:hidden;
+  display:flex;flex-direction:column}
+
+/* header */
+.hdr{height:44px;display:flex;align-items:center;padding:0 16px;gap:12px;
+  border-bottom:1px solid var(--border);background:var(--surface);flex-shrink:0}
+.logo{font-size:13px;font-weight:700;letter-spacing:.08em;color:var(--accent)}
+.logo em{color:var(--dim);font-style:normal;font-weight:400}
+.hdr-pill{background:var(--surface2);border:1px solid var(--border);border-radius:20px;
+  padding:3px 10px;font-size:10px;color:var(--dim);letter-spacing:.06em}
+.hdr-sep{width:1px;height:20px;background:var(--border)}
+.hdr-actions{margin-left:auto;display:flex;gap:6px;align-items:center}
+.btn{padding:5px 14px;border:1px solid var(--border);border-radius:4px;background:transparent;
+  color:var(--text);font:inherit;font-size:11px;letter-spacing:.04em;cursor:pointer}
+.btn:hover{border-color:var(--accent);color:var(--accent)}
+.btn-run{background:var(--accent);border-color:var(--accent);color:#000;font-weight:700}
+.btn-run:hover{background:var(--accent2);border-color:var(--accent2);color:#000}
+
+/* workspace */
+.workspace{flex:1;display:flex;overflow:hidden}
+
+/* sidebar */
+.sidebar{width:186px;border-right:1px solid var(--border);background:var(--surface);
+  flex-shrink:0;overflow-y:auto;padding:14px 0 0}
+.sb-label{font-size:9px;letter-spacing:.14em;color:var(--dim);text-transform:uppercase;
+  padding:0 14px 8px}
+.sb-node{display:flex;align-items:flex-start;gap:9px;padding:7px 10px;margin:0 6px 2px;
+  border-radius:5px;cursor:grab;border:1px solid transparent;user-select:none}
+.sb-node:hover{background:var(--surface2);border-color:var(--border)}
+.sb-node:active{cursor:grabbing}
+.sb-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:2px}
+.sb-name{font-size:11px;line-height:1.4}
+.sb-desc{font-size:9px;color:var(--dim);margin-top:1px}
+.sb-divider{height:1px;background:var(--border);margin:10px 14px}
+
+.sb-tip{font-size:9px;color:var(--dim);padding:10px 14px;line-height:1.6}
+
+/* canvas */
+.canvas-wrap{flex:1;position:relative;overflow:hidden;cursor:default;
+  background:var(--bg);
+  background-image:radial-gradient(circle,#1c1c1c 1px,transparent 1px);
+  background-size:28px 28px}
+.canvas-inner{position:absolute;top:0;left:0;transform-origin:0 0;width:0;height:0}
+.canvas-svg{position:absolute;top:0;left:0;width:100%;height:100%;
+  pointer-events:none;overflow:visible}
+
+/* nodes */
+.node{position:absolute;width:180px;border-radius:8px;
+  border:1px solid var(--border);background:var(--surface);
+  cursor:grab;user-select:none;transition:border-color .15s,box-shadow .15s}
+.node:active{cursor:grabbing}
+.node.selected,.node:hover{
+  border-color:var(--nc);
+  box-shadow:0 0 0 1px var(--nc),0 8px 28px rgba(0,0,0,.7);
+  z-index:50!important}
+.node-hd{display:flex;align-items:center;gap:8px;padding:9px 12px 8px;
+  border-bottom:1px solid var(--border)}
+.node.no-body .node-hd{border-bottom:none;border-radius:8px}
+.node-hdot{width:7px;height:7px;border-radius:50%;background:var(--nc);flex-shrink:0}
+.node-htype{font-size:9px;letter-spacing:.13em;text-transform:uppercase;
+  color:var(--nc);font-weight:700}
+.node-bd{padding:8px 12px 10px}
+.node-bname{font-size:12px;line-height:1.4}
+.node-bdetail{font-size:10px;color:var(--dim);margin-top:3px;line-height:1.5}
+
+/* ports */
+.port{position:absolute;width:11px;height:11px;border-radius:50%;
+  border:2px solid var(--surface);cursor:crosshair;z-index:30;
+  transition:transform .12s,border-color .12s}
+.port:hover{transform:scale(1.5);border-color:var(--text)}
+.p-in  {background:var(--port-in)}
+.p-out {background:var(--port-out)}
+.p-no  {background:var(--c-retry)}
+.p-warn{background:var(--c-branch)}
+.port-lbl{position:absolute;font-size:9px;color:var(--dim);white-space:nowrap;
+  pointer-events:none;letter-spacing:.04em}
+
+/* log panel */
+.log-panel{width:232px;border-left:1px solid var(--border);background:var(--surface);
+  flex-shrink:0;display:flex;flex-direction:column}
+.log-hdr{padding:9px 14px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:7px}
+.log-hdr-lbl{font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim)}
+.live-dot{width:6px;height:6px;border-radius:50%;background:var(--accent);
+  margin-left:auto;animation:pulse 1.8s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.25}}
+.log-body{flex:1;overflow-y:auto;padding:4px 0}
+.log-entry{padding:5px 14px;border-left:2px solid transparent;cursor:default}
+.log-entry:hover{background:var(--surface2)}
+.k-emit{border-color:var(--accent)}
+.k-decide{border-color:var(--c-branch)}
+.k-wait{border-color:var(--c-wait)}
+.k-fail{border-color:var(--c-retry)}
+.k-info{border-color:var(--border)}
+.le-ts{font-size:9px;color:var(--dim)}
+.le-kind{font-size:9px;letter-spacing:.1em;font-weight:700;text-transform:uppercase;margin-left:6px}
+.k-emit .le-kind{color:var(--accent)}
+.k-decide .le-kind{color:var(--c-branch)}
+.k-wait .le-kind{color:var(--c-wait)}
+.k-fail .le-kind{color:var(--c-retry)}
+.k-info .le-kind{color:var(--dim)}
+.le-msg{font-size:10px;color:var(--dim);margin-top:2px;line-height:1.5}
+
+/* hint */
+.canvas-hint{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);
+  font-size:10px;color:var(--dim);letter-spacing:.04em;pointer-events:none;
+  opacity:.6}
+
+/* SVG */
+.e-path{fill:none;stroke-width:1.5}
+.e-default{stroke:#2e2e2e}
+.e-active{stroke:#3a5a3a}
+.e-yes{stroke:#5a7a3a}
+.e-no{stroke:#7a3a3a}
+.e-retry{stroke:#4a5a7a}
+.e-pending{fill:none;stroke:var(--accent);stroke-width:1.5;stroke-dasharray:5 4}
+</style>
+</head>
+<body>
+
+<header class="hdr">
+  <span class="logo">GOBLIN<em>KIT</em></span>
+  <span class="hdr-pill">v1.0-beta</span>
+  <div class="hdr-sep"></div>
+  <span class="hdr-pill" id="wf-name">deploy-pipeline.gk</span>
+  <div class="hdr-actions">
+    <button class="btn" onclick="clearSel()">Deselect</button>
+    <button class="btn">Export journal</button>
+    <button class="btn btn-run">▶ Run</button>
+  </div>
+</header>
+
+<div class="workspace">
+
+  <aside class="sidebar">
+    <div class="sb-label">Nodes</div>
+    <div class="sb-node" draggable="true" data-type="trigger">
+      <span class="sb-dot" style="background:var(--c-trigger)"></span>
+      <div><div class="sb-name">Trigger</div><div class="sb-desc">Entry point</div></div>
+    </div>
+    <div class="sb-node" draggable="true" data-type="task">
+      <span class="sb-dot" style="background:var(--c-task)"></span>
+      <div><div class="sb-name">Task</div><div class="sb-desc">Unit of work</div></div>
+    </div>
+    <div class="sb-node" draggable="true" data-type="branch">
+      <span class="sb-dot" style="background:var(--c-branch)"></span>
+      <div><div class="sb-name">Branch</div><div class="sb-desc">Conditional split</div></div>
+    </div>
+    <div class="sb-node" draggable="true" data-type="loop">
+      <span class="sb-dot" style="background:var(--c-loop)"></span>
+      <div><div class="sb-name">Loop</div><div class="sb-desc">Iterate until</div></div>
+    </div>
+    <div class="sb-divider"></div>
+    <div class="sb-node" draggable="true" data-type="retry">
+      <span class="sb-dot" style="background:var(--c-retry)"></span>
+      <div><div class="sb-name">Retry</div><div class="sb-desc">N attempts</div></div>
+    </div>
+    <div class="sb-node" draggable="true" data-type="wait">
+      <span class="sb-dot" style="background:var(--c-wait)"></span>
+      <div><div class="sb-name">Wait</div><div class="sb-desc">Sleep / delay</div></div>
+    </div>
+    <div class="sb-node" draggable="true" data-type="end">
+      <span class="sb-dot" style="background:var(--c-end);border:1px solid #444"></span>
+      <div><div class="sb-name">End</div><div class="sb-desc">Terminal state</div></div>
+    </div>
+    <div class="sb-divider"></div>
+    <div class="sb-tip">Drag nodes onto canvas<br>Drag port → port to connect<br>Del / Backspace removes selected</div>
+  </aside>
+
+  <div class="canvas-wrap" id="canvas-wrap">
+    <div class="canvas-inner" id="canvas-inner"></div>
+    <svg class="canvas-svg" id="canvas-svg">
+      <g id="canvas-g">
+        <g id="edges-g"></g>
+        <path id="edge-pending" class="e-pending" d="" style="display:none"></path>
+      </g>
+    </svg>
+    <div class="canvas-hint">scroll to zoom · alt+drag to pan · del to remove</div>
+  </div>
+
+  <div class="log-panel">
+    <div class="log-hdr">
+      <span class="log-hdr-lbl">Append-only journal</span>
+      <span class="live-dot"></span>
+    </div>
+    <div class="log-body" id="log-body"></div>
+  </div>
+
+</div>
+
+<script>
+'use strict';
+const NW = 180, PORT_R = 5.5;
+
+const TYPES = {
+  trigger:{ label:'TRIGGER', color:'var(--c-trigger)', ins:0,
+    outs:[{id:'out',cls:'p-out',lbl:''}] },
+  task:   { label:'TASK',    color:'var(--c-task)',    ins:1,
+    outs:[{id:'out',cls:'p-out',lbl:''}] },
+  branch: { label:'BRANCH',  color:'var(--c-branch)',  ins:1,
+    outs:[{id:'yes',cls:'p-out',lbl:'yes'},{id:'no',cls:'p-no',lbl:'no'}] },
+  loop:   { label:'LOOP',    color:'var(--c-loop)',    ins:1,
+    outs:[{id:'cont',cls:'p-out',lbl:'↺'},{id:'exit',cls:'p-no',lbl:'exit'}] },
+  retry:  { label:'RETRY',   color:'var(--c-retry)',   ins:1,
+    outs:[{id:'retry',cls:'p-warn',lbl:'retry'},{id:'fail',cls:'p-no',lbl:'fail'}] },
+  wait:   { label:'WAIT',    color:'var(--c-wait)',    ins:1,
+    outs:[{id:'out',cls:'p-out',lbl:''}] },
+  end:    { label:'END',     color:'var(--c-end)',     ins:1, outs:[] },
+};
+
+let nodes=[], edges=[], pan={x:100,y:28}, zoom=0.72;
+let sel=null, drag=null, conn=null, panning=null, nid=1;
+const uid=()=>'n'+(nid++);
+
+/* ── pre-populate ── */
+(function seed(){
+  const N=(type,name,x,y,detail='')=>({id:uid(),type,name,x,y,detail});
+  const n1  = N('trigger','git push → main',          280,  20);
+  const n2  = N('task',   'lint + test suite',        280, 108,'pnpm test --coverage');
+  const n3  = N('branch', 'all checks pass?',         280, 216);
+  const n4  = N('end',    'fail: tests',               48, 328,'exit 1');
+  const n5  = N('task',   'build + tag image',        462, 328,'docker build -t app:$SHA .');
+  const n6  = N('task',   'push to registry',         462, 456,'docker push registry/app:$SHA');
+  const n7  = N('task',   'deploy to staging',        462, 584,'kubectl set image app=app:$SHA');
+  const n8  = N('wait',   'stabilize — 30 s',         462, 696,'sleep 30');
+  const n9  = N('branch', 'health check ok?',         462, 796);
+  const n10 = N('task',   'promote to prod',          280, 904,'helm upgrade app ./chart');
+  const n11 = N('retry',  'retry deploy (3×)',        648, 904,'max attempts: 3');
+  const n12 = N('end',    'released ✓',               280,1016,'tag + notify');
+  nodes=[n1,n2,n3,n4,n5,n6,n7,n8,n9,n10,n11,n12];
+
+  const E=(fn,fp,tn,tp,cls='e-active')=>({id:'e'+(nid++),from:{nid:fn,pid:fp},to:{nid:tn,pid:tp},cls});
+  edges=[
+    E(n1.id,'out', n2.id,'in'),
+    E(n2.id,'out', n3.id,'in'),
+    E(n3.id,'no',  n4.id,'in','e-no'),
+    E(n3.id,'yes', n5.id,'in','e-yes'),
+    E(n5.id,'out', n6.id,'in'),
+    E(n6.id,'out', n7.id,'in'),
+    E(n7.id,'out', n8.id,'in'),
+    E(n8.id,'out', n9.id,'in'),
+    E(n9.id,'yes', n10.id,'in','e-yes'),
+    E(n9.id,'no',  n11.id,'in','e-no'),
+    E(n10.id,'out',n12.id,'in'),
+    E(n11.id,'retry',n7.id,'in','e-retry'),
+  ];
+})();
+
+/* ── geometry ── */
+function nh(n){
+  if(!n.name) return 36;
+  return 36 + (n.detail?50:36);
+}
+
+function portPos(n,pid,isOut){
+  const t=TYPES[n.type];
+  if(!isOut) return {x:n.x+NW/2, y:n.y};
+  const outs=t.outs, idx=outs.findIndex(o=>o.id===pid), total=outs.length;
+  return {x:n.x + NW*(idx+1)/(total+1), y:n.y+nh(n)};
+}
+
+function bez(x1,y1,x2,y2){
+  const cy=Math.max(40,Math.abs(y2-y1)*0.45);
+  return `M${x1} ${y1} C${x1} ${y1+cy},${x2} ${y2-cy},${x2} ${y2}`;
+}
+
+/* ── render ── */
+const ci=document.getElementById('canvas-inner');
+const cg=document.getElementById('canvas-g');
+const eg=document.getElementById('edges-g');
+const pp=document.getElementById('edge-pending');
+
+function applyTransform(){
+  ci.style.transform=`translate(${pan.x}px,${pan.y}px) scale(${zoom})`;
+  cg.setAttribute('transform',`translate(${pan.x},${pan.y}) scale(${zoom})`);
+}
+
+function render(){
+  applyTransform();
+
+  /* nodes */
+  ci.innerHTML='';
+  nodes.forEach(n=>{
+    const t=TYPES[n.type], h=nh(n);
+    const el=document.createElement('div');
+    el.className='node'+(n.id===sel?' selected':'');
+    el.id='nd-'+n.id;
+    el.style.cssText=`left:${n.x}px;top:${n.y}px;z-index:10;--nc:${t.color}`;
+
+    let html=`<div class="node-hd"><span class="node-hdot"></span><span class="node-htype">${t.label}</span></div>`;
+    if(n.name) html+=`<div class="node-bd"><div class="node-bname">${n.name}</div>${n.detail?`<div class="node-bdetail">${n.detail}</div>`:''}</div>`;
+    el.innerHTML=html;
+    if(!n.name) el.querySelector('.node-hd').style.borderBottom='none';
+
+    /* input port */
+    if(t.ins>0){
+      const p=mkPort('p-in','in',0,NW/2-PORT_R,-PORT_R);
+      p.dataset.nid=n.id; p.dataset.pid='in'; p.dataset.out='0';
+      el.appendChild(p);
+    }
+
+    /* output ports */
+    t.outs.forEach((o,i)=>{
+      const total=t.outs.length;
+      const px=NW*(i+1)/(total+1)-PORT_R;
+      const p=mkPort(o.cls,o.lbl,i,px,h-PORT_R);
+      p.dataset.nid=n.id; p.dataset.pid=o.id; p.dataset.out='1';
+      el.appendChild(p);
+    });
+
+    el.addEventListener('mousedown',onNodeMd);
+    ci.appendChild(el);
+  });
+
+  /* edges */
+  eg.innerHTML='';
+  edges.forEach(e=>{
+    const fn=nodes.find(x=>x.id===e.from.nid), tn=nodes.find(x=>x.id===e.to.nid);
+    if(!fn||!tn) return;
+    const f=portPos(fn,e.from.pid,true), t2=portPos(tn,e.to.pid,false);
+    const path=document.createElementNS('http://www.w3.org/2000/svg','path');
+    path.setAttribute('d',bez(f.x,f.y,t2.x,t2.y));
+    path.setAttribute('class','e-path '+e.cls);
+    eg.appendChild(path);
+  });
+}
+
+function mkPort(cls,lbl,idx,px,py){
+  const p=document.createElement('div');
+  p.className='port '+cls;
+  p.style.cssText=`left:${px}px;${py<0?'top':'bottom'}:${Math.abs(py)}px`;
+  if(lbl){
+    const l=document.createElement('span');
+    l.className='port-lbl';
+    l.textContent=lbl;
+    l.style.cssText=py<0?'top:13px;left:50%;transform:translateX(-50%)':'bottom:13px;left:50%;transform:translateX(-50%)';
+    p.appendChild(l);
+  }
+  return p;
+}
+
+/* ── node drag ── */
+function onNodeMd(e){
+  if(e.target.classList.contains('port')) return;
+  const n=nodes.find(x=>x.id===e.currentTarget.id.slice(3));
+  if(!n) return;
+  sel=n.id;
+  drag={id:n.id,ox:n.x,oy:n.y,mx:e.clientX,my:e.clientY,z:zoom};
+  e.stopPropagation(); e.preventDefault();
+  render();
+}
+
+/* ── port connect ── */
+ci.addEventListener('mousedown',e=>{
+  if(!e.target.classList.contains('port')) return;
+  if(e.target.dataset.out!=='1') return;
+  conn={nid:e.target.dataset.nid, pid:e.target.dataset.pid, mx:e.clientX, my:e.clientY};
+  e.stopPropagation(); e.preventDefault();
+});
+
+/* ── canvas pan (alt+drag or middle mouse) ── */
+const wrap=document.getElementById('canvas-wrap');
+wrap.addEventListener('mousedown',e=>{
+  if(e.button===1||(e.button===0&&e.altKey)){
+    panning={mx:e.clientX,my:e.clientY,px:pan.x,py:pan.y};
+    e.preventDefault();
+  } else if(e.target===wrap||e.target.id==='canvas-inner'){
+    sel=null; render();
+  }
+});
+
+/* ── zoom ── */
+wrap.addEventListener('wheel',e=>{
+  e.preventDefault();
+  const rect=wrap.getBoundingClientRect();
+  const mx=e.clientX-rect.left, my=e.clientY-rect.top;
+  const delta=e.deltaY>0?0.92:1.08;
+  const nz=Math.max(0.25,Math.min(2.5,zoom*delta));
+  pan.x=mx-(mx-pan.x)*nz/zoom;
+  pan.y=my-(my-pan.y)*nz/zoom;
+  zoom=nz;
+  render();
+},{passive:false});
+
+/* ── global move ── */
+document.addEventListener('mousemove',e=>{
+  if(drag){
+    const n=nodes.find(x=>x.id===drag.id);
+    if(n){
+      n.x=drag.ox+(e.clientX-drag.mx)/drag.z;
+      n.y=drag.oy+(e.clientY-drag.my)/drag.z;
+      render();
+    }
+  }
+  if(conn){
+    const fn=nodes.find(x=>x.id===conn.nid);
+    if(!fn) return;
+    const from=portPos(fn,conn.pid,true);
+    const rect=wrap.getBoundingClientRect();
+    const wx=(e.clientX-rect.left-pan.x)/zoom;
+    const wy=(e.clientY-rect.top-pan.y)/zoom;
+    pp.setAttribute('d',bez(from.x,from.y,wx,wy));
+    pp.style.display='';
+  }
+  if(panning){
+    pan.x=panning.px+(e.clientX-panning.mx);
+    pan.y=panning.py+(e.clientY-panning.my);
+    applyTransform();
+  }
+});
+
+/* ── global up ── */
+document.addEventListener('mouseup',e=>{
+  if(conn){
+    pp.style.display='none';
+    const target=document.elementFromPoint(e.clientX,e.clientY);
+    if(target&&target.classList.contains('port')&&target.dataset.out==='0'){
+      const toNid=target.dataset.nid, toPid=target.dataset.pid;
+      const dup=edges.find(x=>x.from.nid===conn.nid&&x.from.pid===conn.pid&&x.to.nid===toNid);
+      if(!dup&&toNid!==conn.nid){
+        edges.push({id:'e'+(nid++),from:{nid:conn.nid,pid:conn.pid},to:{nid:toNid,pid:toPid},cls:'e-active'});
+        addLog('k-emit','EMIT',`edge ${conn.pid} → ${toPid}`);
+      }
+    }
+    conn=null; render();
+  }
+  drag=null; panning=null;
+});
+
+/* ── delete ── */
+document.addEventListener('keydown',e=>{
+  if((e.key==='Delete'||e.key==='Backspace')&&sel&&e.target===document.body){
+    nodes=nodes.filter(n=>n.id!==sel);
+    edges=edges.filter(x=>x.from.nid!==sel&&x.to.nid!==sel);
+    addLog('k-emit','EMIT','node.removed '+sel);
+    sel=null; render();
+  }
+});
+
+function clearSel(){ sel=null; render(); }
+
+/* ── sidebar drag-drop ── */
+let sbType=null;
+document.querySelectorAll('.sb-node').forEach(el=>{
+  el.addEventListener('dragstart',e=>{sbType=el.dataset.type;e.dataTransfer.effectAllowed='copy'});
+});
+wrap.addEventListener('dragover',e=>e.preventDefault());
+wrap.addEventListener('drop',e=>{
+  e.preventDefault();
+  if(!sbType) return;
+  const rect=wrap.getBoundingClientRect();
+  const x=(e.clientX-rect.left-pan.x)/zoom - NW/2;
+  const y=(e.clientY-rect.top-pan.y)/zoom - 20;
+  const t=TYPES[sbType];
+  const n={id:uid(),type:sbType,name:t.label.charAt(0)+t.label.slice(1).toLowerCase(),x,y,detail:''};
+  nodes.push(n); sel=n.id;
+  addLog('k-emit','EMIT','node.created '+sbType+' → '+n.id);
+  sbType=null; render();
+});
+
+/* ── journal log ── */
+const logBody=document.getElementById('log-body');
+const LOG=[
+  ['k-info',  '00:00:00','INFO',  'journal opened — deploy-pipeline.gk'],
+  ['k-emit',  '00:00:01','EMIT',  'workflow.started  run_id=r_f4a2b'],
+  ['k-emit',  '00:00:01','EMIT',  'node.entered  trigger → git push'],
+  ['k-emit',  '00:00:02','EMIT',  'node.entered  task → lint + test suite'],
+  ['k-decide','00:00:16','DECIDE','branch: all checks pass? → yes'],
+  ['k-emit',  '00:00:16','EMIT',  'node.entered  task → build + tag image'],
+  ['k-emit',  '00:00:38','EMIT',  'node.entered  task → push to registry'],
+  ['k-emit',  '00:00:52','EMIT',  'node.entered  task → deploy to staging'],
+  ['k-wait',  '00:00:53','WAIT',  'sleeping 30 s — stabilize'],
+  ['k-emit',  '00:01:23','EMIT',  'node.entered  branch → health check ok?'],
+  ['k-decide','00:01:24','DECIDE','branch: health check ok? → yes'],
+  ['k-emit',  '00:01:24','EMIT',  'node.entered  task → promote to prod'],
+  ['k-emit',  '00:01:45','EMIT',  'node.entered  end → released ✓'],
+  ['k-info',  '00:01:45','INFO',  'run r_f4a2b  completed — 1m 45s'],
+];
+
+function addLog(cls,kind,msg){
+  const ts=new Date().toTimeString().slice(0,8);
+  appendEntry([cls,ts,kind,msg]);
+}
+
+function appendEntry([cls,ts,kind,msg]){
+  const d=document.createElement('div');
+  d.className='log-entry '+cls;
+  d.innerHTML=`<div><span class="le-ts">${ts}</span><span class="le-kind">${kind}</span></div><div class="le-msg">${msg}</div>`;
+  logBody.appendChild(d);
+  logBody.scrollTop=logBody.scrollHeight;
+}
+
+function seedLog(){
+  let i=0;
+  (function next(){
+    if(i>=LOG.length) return;
+    appendEntry(LOG[i++]);
+    setTimeout(next,50+Math.random()*90);
+  })();
+}
+
+render();
+seedLog();
+</script>
+</body>
+</html>

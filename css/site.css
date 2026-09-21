@@ -410,12 +410,30 @@ body.is-light .hud__mini{ filter:invert(1); }
 
    Top at 23% clears .hud__read, which reaches about 21% of the viewport,
    and the stack ends well above .hud__prog. */
+/* Three down the right gutter. The other three are in the bottom band, and
+   they are the SAME CARD at the same size: the split is where they sit, not
+   how much they count.
+
+   This was briefly one scrolling column of six, which failed in two ways at
+   once. A card sliced by the window's edge reads as a rendering fault rather
+   than as a hint that the list continues; and hovering a card already opens
+   its panel, so a column that also tracked the pointer meant the card under
+   the cursor kept changing while the panel flickered between projects. Two
+   bands of three need no gesture at all. */
 .disp__feat{
   position:absolute; right:var(--disp-side); top:23%;
   width:min(300px, 26vw); display:flex; flex-direction:column; gap:14px;
 }
 .pcard{
   border:1px solid var(--line); padding:12px 14px;
+  /* THE CARD NEEDS A GROUND, and the reason is worth stating because the
+     obvious diagnosis is wrong. The cards already paint above the particle
+     field: .stage is z-index 20, .sub is 1. What made the field look like it
+     was ON TOP of them was that they had no background, so 40,000 points
+     showed THROUGH a transparent box and the text was read against moving
+     noise. Near-opaque paper, the same treatment .reveal__panel uses for the
+     same reason: the field shows around a card, not through it. */
+  background:color-mix(in srgb, var(--ground) 94%, transparent);
   font-family:var(--font-mono); font-size:var(--ui-10);
   letter-spacing:var(--track-ui); text-transform:uppercase; line-height:1.7;
   /* THE ONE PLACE ON THE PAGE A VISITOR CAN CLICK INSIDE A PHASE.
@@ -437,8 +455,6 @@ body.is-light .hud__mini{ filter:invert(1); }
 .pcard:hover{ border-color:var(--red-ghost); }
 /* The project whose panel is open. */
 .pcard.is-active{ border-color:var(--red); }
-.pslot.is-active{ border-style:solid; border-color:var(--red); }
-.pane.is-live .pslot{ pointer-events:auto; }
 
 /* ---- THE REVEAL -------------------------------------------------------------
    A project surfaces OVER the particle field through a soft wave. See
@@ -574,17 +590,54 @@ body.is-light .hud__mini{ filter:invert(1); }
    judged now rather than after the copy lands. */
 /* Everything beyond the three. Deliberately half the weight of a .pcard —
    these are an index, not a shelf. */
+/* THE BOTTOM BAND. Three more of the same card, centred along the only strip
+   on this screen with no chrome in it: the log stops at 23% and the scroll
+   readout sits to the right of this row, not across it.
+
+   Each column is the width of a gutter card, so all six read as one set seen
+   in two places rather than as a shelf and an index. It is anchored to the
+   bottom chrome rather than to a percentage, because a percentage that clears
+   the bar at 900px tall runs under it at 720. */
+/* SHORT SCREENS GET A TIGHTER CARD — the same tighter card, all six of them.
+   On a 720p laptop the right column and the bottom band are at the same
+   height, so unless the column ends before the row begins the two collide.
+   Trimming every card equally keeps the set identical, which is the whole
+   point of the two bands; trimming only the bottom three would make them a
+   lesser thing again. */
+@media (max-height: 820px){
+  .pcard{ padding:9px 12px; line-height:1.55; }
+  .pcard span{ margin-top:4px; line-height:1.45; }
+  .pcard a, .pcard s{ margin-top:6px; }
+  /* Both numbers are measured, not chosen. At 1280x720 they leave 16px
+     between the column's last card and the row's first, and keep the column
+     clear of the readout in the top-right corner. */
+  .disp__feat{ gap:10px; top:17%; }
+  .disp__slots{ gap:8px; bottom:calc(var(--chrome-b) - 53px); }
+}
+
+/* THE BOTTOM ROW RUNS AT 0.8. Every metric of the card, not just its width:
+   width, padding, both type sizes and the gap between them. Scaling only the
+   width would have made each card TALLER as its sentence wrapped, which is
+   the opposite of what "smaller" means here.
+
+   The size is what keeps the row inside its band. At full size the three of
+   them spanned 928px, which on a wide-but-short window put the last card
+   under the right-hand column and brought the first one up against the
+   statement; at 0.8 the row is 742px and clears both. */
+.disp__slots .pcard{ padding:10px 11px; }
+.disp__slots .pcard b{ font-size:10.5px; }
+.disp__slots .pcard span{ font-size:9px; margin-top:5px; }
+.disp__slots .pcard a,
+.disp__slots .pcard s{ font-size:calc(var(--ui-10) * .8); margin-top:7px; }
+
 .disp__slots{
-  position:absolute; left:50%; transform:translateX(-50%); bottom:7%;
-  display:grid; grid-template-columns:repeat(3, minmax(120px, 165px)); gap:14px;
+  position:absolute; left:50%; transform:translateX(-50%);
+  /* Measured against the instruments rather than guessed: the scroll readout
+     occupies 831–846 on a 900-tall screen and the bar the last 28px, so the
+     row ends at 100px up and clears both with room to spare. */
+  bottom:calc(var(--chrome-b) - 45px);
+  display:grid; grid-template-columns:repeat(3, min(240px, 21vw)); gap:11px;
 }
-.pslot{
-  border:1px dashed var(--red-ghost); padding:8px 10px;
-  font-family:var(--font-mono); font-size:var(--ui-10);
-  letter-spacing:var(--track-ui); text-transform:uppercase; line-height:1.7;
-}
-.pslot b{ display:block; font-weight:400; color:var(--ink); }
-.pslot span{ display:block; color:var(--label); margin-top:4px; }
 
 /* Placeholder copy is marked in the DESIGN, not just the source, so an
    unfilled slot cannot ship by accident. */
