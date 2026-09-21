@@ -174,10 +174,16 @@ window.PAGE.register('mstage', function (scope) {
     set('phase', cur, function (v) {
       if (readPhase) readPhase.textContent = NAMES[v] || '--';
       btns.forEach(function (btn, j) { btn.classList.toggle('is-on', j === v); });
-      /* AUTOMATION (index 3) has the cloud fully overlapping its text, so the
-         whole canvas should be blurred there. EXPERIMENTS (index 4) keeps its
-         open-band cloud sharp; only the text containers get backdrop-filter. */
-      document.body.classList.toggle('is-phase-field', v === 3);
+    });
+
+    /* AUTOMATION cloud blur: activate only after the .lede text has risen
+       above the object band's bottom edge (top 6.2lvh + height 45.2lvh =
+       51.4lvh). Until then the text sits below the cloud and needs no blur.
+       geo[LIGHT].start = pane.top + 58lvh (pane padding). Condition:
+       text's viewport position < 51.4lvh  →  y > start - 0.514 * Hc */
+    var g3 = geo[LIGHT];
+    set('fieldblur', cur === LIGHT && g3 && y > g3.start - 0.514 * Hc, function (v) {
+      document.body.classList.toggle('is-field-blur', v);
     });
 
     /* background words: same falloff as desktop (js/scroll.js), and they

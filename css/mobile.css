@@ -471,16 +471,17 @@
   .m-live.m-ready .sub{ opacity:1; }
   /* AUTOMATION: cloud fills the entire frame and overlaps all text.
      Blur the whole canvas so nothing competes with the words.
-     is-phase-field is toggled by js/mstage.js when phase index === 3. */
-  .m-live body.is-phase-field .sub{
+     is-field-blur is toggled by js/mstage.js once the AUTOMATION text has
+     risen above the cloud band's bottom edge. */
+  .m-live body.is-field-blur .sub{
     filter:blur(5px);
     transition:filter 320ms linear;
   }
   /* EXPERIMENTS: cloud sits in its own open band above the text.
      Blur only behind the text containers so the band stays sharp. */
-  .m-live body.is-light:not(.is-phase-field) .lede,
-  .m-live body.is-light:not(.is-phase-field) .auto,
-  .m-live body.is-light:not(.is-phase-field) .frag:not(.frag--echo){
+  .m-live body.is-light:not(.is-field-blur) .lede,
+  .m-live body.is-light:not(.is-field-blur) .auto,
+  .m-live body.is-light:not(.is-field-blur) .frag:not(.frag--echo){
     backdrop-filter:blur(5px);
     -webkit-backdrop-filter:blur(5px);
   }
