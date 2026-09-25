@@ -201,7 +201,8 @@ def check_meta():
                 fail('%s points at %s, which does not exist in the build' % (k, local))
         if 'sillywizard.dev' in host:
             warn('meta URLs still say sillywizard.dev - change them if that is '
-                 'not the domain you bought (see DEPLOY.md)')
+                 'not the domain you bought: the canonical and og:/twitter: '
+                 'tags in index.html, plus sitemap.xml and robots.txt')
 
 
 # ---- 6 · generated assets exist and are not obviously stale ---------------

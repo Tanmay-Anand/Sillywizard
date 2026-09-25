@@ -5,6 +5,7 @@
 .gitattributes
 .assetsignore
 .claude
+.idea
 wrangler.jsonc
 vercel.json
 *.md
