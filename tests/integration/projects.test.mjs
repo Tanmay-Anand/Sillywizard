@@ -55,10 +55,19 @@ describe('the project bands', () => {
     expect(window.ROLL).toBeUndefined();
   });
 
-  it('marks a project with no public repository, rather than linking nowhere', () => {
-    const goblin = cards('.disp__slots').find((c) => nameOf(c) === 'GoblinKit');
-    expect(goblin.querySelector('a')).toBeNull();
-    expect(goblin.querySelector('s.slot').textContent).toMatch(/no public repo/i);
+  /* Which projects are public changes as repositories open up, so the rule is
+     the invariant rather than the roster: a card offers a way in OR says why
+     there is none, never both and never neither. Naming a project here was
+     what broke when GoblinKit's repository went public. */
+  it('gives every project a way in, or says there is none', () => {
+    const auto = [...document.querySelectorAll('.pane--field .auto__out')];
+    cards('.disp__feat').concat(cards('.disp__slots'), auto).forEach((c) => {
+      const link = c.querySelector('a');
+      const marker = c.querySelector('s.slot');
+      expect(Boolean(link), nameOf(c)).toBe(!marker);
+      if (link) expect(link.getAttribute('href'), nameOf(c)).toMatch(/^https:\/\//);
+      else expect(marker.textContent, nameOf(c)).toMatch(/no public repo/i);
+    });
   });
 });
 

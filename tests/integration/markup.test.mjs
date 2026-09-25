@@ -156,15 +156,16 @@ describe('projects', () => {
   });
 
   /* Not every project has a running interface to photograph - a design
-     document has nothing to show. Those open with their sentence alone. The
-     rule is about what a frame MEANS: if one is there, it holds a capture. */
-  it('gives a project with captures 2-4 frames, and each carries a real image', () => {
+     document has nothing to show, and a toolchain with no screen shows its
+     mark instead. Those carry one frame or none. The rule is about what a
+     frame MEANS: if one is there, it holds a real image, never a placard. */
+  it('gives a project with captures 1-4 frames, and each carries a real image', () => {
     const shown = $$('[data-reveal]').filter((it) => frames(it).length);
     expect(shown.length).toBeGreaterThan(0);
     shown.forEach((it) => {
       const shots = frames(it);
       const name = it.querySelector('b').textContent.trim();
-      expect(shots.length, name).toBeGreaterThanOrEqual(2);
+      expect(shots.length, name).toBeGreaterThanOrEqual(1);
       expect(shots.length, name).toBeLessThanOrEqual(4);
       shots.forEach((sh) => {
         const img = sh.querySelector('img');

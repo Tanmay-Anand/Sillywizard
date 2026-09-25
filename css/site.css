@@ -213,6 +213,10 @@ body.is-light .hud__mini{ filter:invert(1); }
   letter-spacing:var(--track-ui); text-transform:uppercase;
 }
 .lede .dim{ color:var(--label); }
+/* The word the sentence is actually about. Only the noun turns - the
+   sentence around it stays ink, so the three lines read as one thought
+   with three endings rather than three red lines. */
+.lede .hot{ color:var(--red); }
 /* Keeps a compound together without U+2011: Space Grotesk has no glyph for
    the non-breaking hyphen, and the fallback drew it as a gap. */
 .nb{ white-space:nowrap; }
@@ -561,6 +565,15 @@ body.is-light .hud__mini{ filter:invert(1); }
    cut the screen in half, so a tall shot sits inside its frame instead. */
 .rv__shot--tall{ aspect-ratio:4 / 5; }
 .rv__shot--tall img{ object-fit:contain; }
+/* A near-square capture cropped from the centre loses its chrome top and
+   bottom and reads as a fragment. Anchoring it keeps the part that says what
+   the screen IS - the toolbar and the head of the graph. */
+.rv__shot--top img{ object-position:top center; }
+/* A mark is not a screenshot: it must not be cropped, and it earns the whole
+   row rather than sitting in one column of two. */
+.rv__shots > :only-child{ grid-column:1 / -1; }
+.rv__shot--mark{ aspect-ratio:21 / 9; background:none; }
+.rv__shot--mark img{ object-fit:contain; }
 .rv__link{
   display:inline-block; margin-top:16px; text-decoration:none;
   font-family:var(--font-mono); font-size:var(--ui-10);

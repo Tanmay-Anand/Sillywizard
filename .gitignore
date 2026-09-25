@@ -23,3 +23,10 @@ Thumbs.db
 __pycache__/
 *.pyc
 .claude/
+
+# IDE
+.idea/
+
+# Deploy runbook and pre-ship checklist: kept locally, not in the repo.
+DEPLOY.md
+CHECKLIST.md
