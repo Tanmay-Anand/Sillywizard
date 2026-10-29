@@ -185,6 +185,7 @@
   }
 
   /* ---- type: the hollow scale survives, at phone sizes ------------------ */
+  .void__idx{ padding-left:0; }
   .void__say{
     padding-left:0; max-width:none;
     font-size:clamp(2rem, 10.5vw, 3rem); line-height:1.02;
@@ -206,7 +207,19 @@
      at the top instead. The outputs become a plain list under the
      statement, rule and all. */
   .auto{ position:static; }
-  .auto__out{ position:static; width:auto; margin:0 0 18px; pointer-events:auto; }
+  /* THE SAME CARD OPEN SOURCE USES. On desktop these are callouts hanging off
+     leader lines, so a rule down one side is enough to tie each one to the
+     structure. Here the lines are gone (see below), and three unboxed blocks
+     of text read as one run-on column with no edges. Same border, padding and
+     near-opaque ground as .pcard, for the same reason it has one: the field
+     shows AROUND a card, not through it. */
+  .auto__out{
+    position:static; width:auto; margin:0 0 12px; pointer-events:auto;
+    border:1px solid var(--line); padding:12px 14px;
+    background:color-mix(in srgb, var(--ground) 94%, transparent);
+  }
+  /* Tapping one opens its panel; the card says so, as .pcard does. */
+  .auto__out.is-active{ border-color:var(--red); }
 
   /* ---- the leader lines go ------------------------------------------------
      They point at a subject that is in the middle of the screen on desktop
@@ -217,48 +230,39 @@
   .pane--river{ display:block; }
   .annot__lines{ display:none !important; }
 
-  /* ---- the flow: one column again ---------------------------------------
-     Two gutters flanking a subject is a desktop arrangement; here there is
-     no subject between them to flank, so the two halves stack back into the
-     single sequence they always were. */
+  /* ---- the flow: the list itself ---------------------------------------
+     The phone runs neither js/flow.js nor js/annot.js - there is no scroll
+     position to step through and no subject beside the copy to point at. So
+     the stepper's parts are hidden and the eight questions are the ordered
+     list, read in order. */
   .flow{
-    position:static; width:auto; left:auto; right:auto;
-    text-align:left !important; margin:0 0 20px;
-    display:flex; flex-direction:column; gap:20px;
+    position:static; translate:none; width:auto; left:auto;
+    margin:0; align-self:stretch;
   }
-  /* The desktop scatter is placement around a subject that is not here, so
-     it is undone completely: back in flow, in reading order. */
-  .flow p, .flow__end{
-    position:static; translate:none; width:auto; font-size:13px;
-  }
-  /* align-self, because the pane centres its children on this build: each
-     block shrank to its own text and sat centred, so the three groups
-     started at three different left edges down one column of reading. */
-  .flow, .flow__end{ align-self:stretch; }
-  .flow__end{ margin:0 0 20px; }
+  .flow__count, .flow__say, .flow__bars{ display:none; }
+  .flow__list{ margin:0; }
 
-  /* ONE LINE OF THOUGHT. On desktop the questions probe the structure from
-     both sides; on a phone they are read in order, so they become a single
-     timeline: a hairline down the left, a mark at each question, and the
-     line ends in red at the conclusion. Padding rather than gap, or the
-     rule breaks between items. */
-  .flow{ gap:0; margin:0; }
-  /* relative for the marks - so the desktop scatter offsets (top: --y,
-     left: the channel edge) have to be cleared, or relative positioning
-     applies them: the conclusion was pushed 244px past the screen edge and
-     widened the whole page to 575px. */
-  .flow p, .flow__end{
-    position:relative; top:auto; left:auto; right:auto;
-    padding:9px 0 9px 20px; margin:0;
+  /* ONE LINE OF THOUGHT. On a phone the questions are read in order, so
+     they are a single timeline: a hairline down the left, a mark at each
+     question, and the line ends in red at the conclusion. Padding rather
+     than gap, or the rule breaks between items. */
+  .flow__list li{
+    position:relative; padding:9px 0 9px 20px; margin:0;
     border-left:1px solid var(--leader);
+    color:var(--ink); font-size:13px; letter-spacing:.05em; line-height:1.5;
   }
-  .flow p::before, .flow__end::before{
+  /* The desktop numbers the list with this pseudo-element; here it is the
+     timeline's mark instead. */
+  .flow__list li::before{
     content:''; position:absolute; left:-3px; top:50%; width:5px; height:5px;
     margin-top:-2.5px; border-radius:50%; background:var(--ground);
     box-shadow:0 0 0 1px var(--leader);
   }
-  .flow__end{ border-left-color:var(--red); margin-bottom:24px; padding-bottom:0; }
-  .flow__end::before{ background:var(--red); box-shadow:none; }
+  .flow__list .flow__end{
+    color:var(--red); border-left-color:var(--red);
+    margin-bottom:24px; padding-bottom:0;
+  }
+  .flow__list .flow__end::before{ background:var(--red); box-shadow:none; }
 
   /* ---- the project cards ------------------------------------------------
      Full width and in flow. pointer-events is re-enabled unconditionally
@@ -325,12 +329,11 @@
   }
   /* 4.74:1 on the red, and now there is actually red under them. */
   .ftr__nav a, .ftr__nav a i{ color:#000; }
-  .ftr__notes, .ftr__foot, .ftr .dim{ color:#231010; }
+  .ftr__foot, .ftr .dim{ color:#231010; }
   .ftr__band{ border-color:#0a0a0a; }
   .ftr__title{ font-size:clamp(2.2rem, 13vw, 4rem); }
   .ftr__band{ width:100%; height:96px; }
   .ftr__nav{ gap:26px; flex-wrap:wrap; }
-  .ftr__notes{ flex-direction:column; gap:20px; }
   .ftr__foot{ text-align:center; line-height:1.9; }
 
   /* ---- the bar: a real control strip, not a caption --------------------
@@ -371,10 +374,6 @@
   }
   .bar__left::-webkit-scrollbar{ display:none; }
   .bar__btn{ flex:0 0 auto; }
-  .bar__zone{ display:none; }
-  /* Clock is already in the OS status bar and in .m-read above. Hiding it
-     on all mobile frees room so every phase name fits without scrolling. */
-  .bar__clock{ display:none; }
   .bar__git{ flex:0 0 auto; white-space:nowrap; }
   /* Remove the "+" decoration on all mobile — it costs width every phase
      needs, and the buttons are clearly tappable without it. */
@@ -394,9 +393,6 @@
   }
   body.is-light .m-read{ background:rgba(241,241,237,.85); }
   .m-read b{ font-weight:400; color:var(--red); }
-  /* Timer takes up half the bar for something the user can see in their OS
-     status bar. Hide it; the name + phase is enough. */
-  .m-read span:last-child{ display:none; }
 }
 
 /* Everything above is phone-only; this keeps the two mobile-only elements
@@ -477,7 +473,7 @@
     filter:blur(5px);
     transition:filter 320ms linear;
   }
-  /* EXPERIMENTS: cloud sits in its own open band above the text.
+  /* OPEN SOURCE: cloud sits in its own open band above the text.
      Blur only behind the text containers so the band stays sharp. */
   .m-live body.is-light:not(.is-field-blur) .lede,
   .m-live body.is-light:not(.is-field-blur) .auto,

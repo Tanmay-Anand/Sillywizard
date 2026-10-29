@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<title>SILLYWIZARD</title>
+<title>Tanmay Anand // SILLYWIZARD</title>
 <meta name="description" content="SILLYWIZARD // Tanmay Anand. Backend and systems engineer: Java, Spring Boot, APIs, Docker, Linux, and a habit of asking why a system is shaped the way it is." />
 <meta name="color-scheme" content="dark light" />
 <meta name="theme-color" content="#070707" />
@@ -107,7 +107,6 @@
      time by tools/make-og.py. -->
 <div class="m-read" aria-hidden="true">
   <span>TANMAY ANAND <span class="dim">//</span> <b data-m-phase>BUILD</b></span>
-  <span>GMT+5:30 <span data-m-time>00:00:00</span></span>
 </div>
 <!-- A DIV, NOT AN IMG, and the src lives in css/mobile.css.
 
@@ -162,9 +161,6 @@
       <div class="hud__row"><span>phase</span><b data-hud-phase>BUILD</b></div>
       <div class="hud__row"><span>state</span><b data-hud-state>stable</b></div>
       <div class="hud__row"><span>coherence</span><b data-hud-coh>1.000</b></div>
-      <div class="hud__rule"></div>
-      <div class="hud__row"><span>observer</span><b>present</b></div>
-      <div class="hud__row"><span>uptime</span><b data-hud-uptime>00:00:00</b></div>
     </div>
 
     <p class="hud__edge hud__edge--l">TANMAY ANAND</p>
@@ -190,6 +186,9 @@
            Almost nothing. One statement, one cropped numeral, the subject.
            It exists to set a silence the next four screens break. -->
       <section class="pane pane--void" data-phase="0" id="copy" aria-label="Phase 01, Build">
+        <!-- Every later section opens on a line like this; the first had none,
+             so the only visible name on the site was the dim label on the rail. -->
+        <p class="lede__idx void__idx">TANMAY ANAND <span class="dim">//</span> BACKEND &amp; SYSTEMS ENGINEER</p>
         <h2 class="void__say">Most of what<br />I build is<br />invisible.</h2>
       </section>
 
@@ -212,7 +211,10 @@
       <!-- 03 · THE LEDGER ----------------------------------------------
            A technical index, not prose. Numbered rows, hairline rules,
            right-aligned status column. Reads as a schematic. -->
-      <section class="pane pane--ledger" data-phase="2" aria-label="Phase 03, Systems">
+      <!-- data-hold: js/scroll.js pins this section for two viewports of scroll
+           while its eight questions step (js/flow.js) - about two wheel
+           notches each, with nothing else on the page moving. -->
+      <section class="pane pane--ledger" data-phase="2" data-hold="2" aria-label="Phase 03, Systems">
 
         <!-- The statement is first in the markup and bottom-left on the
              desktop screen, under the questions - so a screen reader and a
@@ -231,40 +233,34 @@
              Each one is a callout onto the colony, same mechanism as 02 —
              see js/annot.js. Fixed model-space anchors here rather than
              slabs, because this phase's geometry does not travel. -->
-        <!-- Four left, four right, flanking the subject the way 02 does — and
-             no index numbers. They were a column of red digits doing nothing
-             the order of the list was not already doing, and on a sequence
-             this short they read as a parts list rather than a train of
-             thought. -->
-        <!-- PLACED, NOT STACKED. --y is where the line of text sits, as a
-             share of the screen's height; --dx nudges it right (+) or left
-             (-), so closer on one side is farther on the other. The left
-             four are held in the upper half because the statement owns the
-             bottom-left corner; the right side runs the full height. The
-             two sides are deliberately out of step so no left question
-             reads as the partner of a right one, and
-             each side's anchors run top to bottom in the same order as its
-             text, so no two leaders on a side ever cross.
+        <!-- ONE QUESTION AT A TIME, in the order they get asked. They used to
+             be scattered four a side, which crowded the statement and lost the
+             one thing the eight are for: their order. js/flow.js steps through
+             them with the scroll; js/annot.js draws a single leader from the
+             active question's node to this slot.
 
-             data-anchor is still only a seed — the leader snaps to the
-             nearest real particle of the colony (js/annot.js). -->
-        <div class="flow flow--l">
-          <p style="--y:19%;--dx:2.4vw"  data-anchor="-0.066,1.460,0">What is actually the problem?</p>
-          <p style="--y:28%;--dx:-1.8vw" data-anchor="-0.182,1.312,0">What can't I change?</p>
-          <p style="--y:36%;--dx:3.6vw"  data-anchor="-0.090,1.096,0">Where should the boundaries be?</p>
-          <p style="--y:47%;--dx:-0.6vw" data-anchor="-0.294,0.768,0">Who owns each decision?</p>
+             The <ol> is the record - all eight, in order, for a reader who
+             scrolls fast and for a screen reader, which never sees them one at
+             a time. The line above it is a COPY of the active item and
+             aria-hidden, so nothing is announced twice and nothing needs
+             aria-live. Each item keeps the node it always pointed at:
+             data-anchor is still a seed, snapped to a real particle by
+             js/annot.js, and "end" is still the colony's lowest point. -->
+        <div class="flow" data-flow>
+          <p class="flow__count" aria-hidden="true"><span data-flow-n>01</span> <span class="dim">/</span> 08</p>
+          <p class="flow__say" aria-hidden="true"><span class="flow__ink"></span><span class="flow__ink"></span></p>
+          <p class="flow__bars" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></p>
+          <ol class="flow__list" role="list">
+            <li data-anchor="-0.066,1.460,0">What is actually the problem?</li>
+            <li data-anchor="-0.182,1.312,0">What can't I change?</li>
+            <li data-anchor="-0.090,1.096,0">Where should the boundaries be?</li>
+            <li data-anchor="-0.294,0.768,0">Who owns each decision?</li>
+            <li data-anchor="0.066,1.344,0">What should know about what?</li>
+            <li data-anchor="0.242,0.844,0">What happens when it fails?</li>
+            <li data-anchor="0.174,0.652,0">How will I know it failed?</li>
+            <li class="flow__end" data-anchor="end">And only then, build.</li>
+          </ol>
         </div>
-        <div class="flow flow--r">
-          <p style="--y:24%;--dx:1.2vw"  data-anchor="0.066,1.344,0">What should know about what?</p>
-          <p style="--y:41%;--dx:-2.6vw" data-anchor="0.242,0.844,0">What happens when it fails?</p>
-          <p style="--y:58%;--dx:3vw"    data-anchor="0.174,0.652,0">How will I know it failed?</p>
-        </div>
-        <!-- THE CONCLUSION, out of the column on purpose. Seven questions
-             probe the structure; this is where the reasoning comes out, so
-             its leader runs to the colony's LAST point — "end" is resolved
-             to the lowest particle of the shape rather than to coordinates
-             someone guessed. Last in the markup so it is still read last. -->
-        <p class="flow__end" style="--y:76%;--dx:-0.8vw" data-anchor="end">And only then, build.</p>
 
         <svg class="annot__lines" data-annot-lines aria-hidden="true"></svg>
       </section>
@@ -304,7 +300,7 @@
              by accident. -->
         <div class="auto">
           <article class="auto__out" style="--y:15%" data-route="-0.362,1.128,0.150 -0.092,1.220,0.344 0.135,1.114,0.430 0.325,1.115,0.119 0.579,0.931,0.078" data-reveal tabindex="0">
-            <b>ContractSentinel</b>
+            <b>Contract Sentinel</b>
             <span>Watches every API contract and names what it breaks.</span>
             <a href="https://github.com/Tanmay-Anand/contract-sentinel" target="_blank" rel="noopener"
                data-scramble><span data-label>view project</span> <i>&rarr;</i></a>
@@ -319,15 +315,25 @@
           </article>
           <article class="auto__out" style="--y:38%" data-route="0.099,0.711,0.574 0.268,0.855,0.467 0.397,0.613,0.437 0.521,0.768,0.274 0.732,0.660,-0.061" data-reveal tabindex="0">
             <b>Carta</b>
-            <span>Plugs into a network and writes the map, and the drift.</span>
+            <span>Maps a local network and says what it could not see.</span>
             <a href="https://github.com/Tanmay-Anand/carta" target="_blank" rel="noopener"
                data-scramble><span data-label>view project</span> <i>&rarr;</i></a>
             <template>
+            <!-- Two builds of one thing, side by side and named. Both frames are
+                 the same box with the capture sitting inside it, so a 16:10
+                 desktop shot and a 9:19.5 phone one read as a pair instead of
+                 as one frame gone wrong. -->
             <div class="rv__shots">
-              <div class="rv__shot"><img src="assets/shots/carta-map.webp" width="1920" height="1200"
-                   loading="lazy" decoding="async" alt="Network map generated by Carta."></div>
-              <div class="rv__shot"><img src="assets/shots/carta-findings.webp" width="1920" height="1200"
-                   loading="lazy" decoding="async" alt="Network findings and drift analysis."></div>
+              <figure class="rv__pane">
+                <figcaption class="rv__cap">// desktop</figcaption>
+                <div class="rv__shot rv__shot--fit"><img src="assets/shots/carta-map.webp" width="1600" height="1000"
+                     loading="lazy" decoding="async" alt="The survey map on a desktop, with every claim about the selected device shown beside the evidence for it."></div>
+              </figure>
+              <figure class="rv__pane">
+                <figcaption class="rv__cap">// mobile app</figcaption>
+                <div class="rv__shot rv__shot--fit"><img src="assets/shots/carta-phone.webp" width="640" height="1385"
+                     loading="lazy" decoding="async" alt="The same survey on a phone: the map fills the screen and the selected device sits in a sheet that slides up from the bottom."></div>
+              </figure>
             </div>
             </template>
           </article>
@@ -358,27 +364,27 @@
            labels, the log and the progress bar all own fixed real estate),
            because "scattered" and "landing on top of the instruments" look
            identical in a screenshot and only one of them is the design. -->
-      <section class="pane pane--dispersal" data-phase="4" aria-label="Phase 05, Experiments">
+      <section class="pane pane--dispersal" data-phase="4" aria-label="Phase 05, Open source">
 
         <!-- The anchor. Every other phase has one display-size element to
              enter on; without it this screen was 10px type wall to wall and
              the eye had nowhere to land first. -->
         <div class="lede disp__anchor">
-          <p class="lede__idx">05 <span class="dim">//</span> EXPERIMENTS</p>
+          <p class="lede__idx">05 <span class="dim">//</span> OPEN SOURCE</p>
           <h2 class="lede__say">Not everything<br />starts as a brief.</h2>
           <p class="lede__desc">Some ideas are worth<br />building just to find out.</p>
           <p class="lede__more">Side projects, tools, interactive builds,<br />
             and unfinished ideas.</p>
           <p class="lede__more lede__more--ink">Some become <span class="hot">products</span>.<br />
             Some become <span class="hot">lessons</span>.<br />
-            Some become <span class="hot">something else</span>.</p>
+            Some stay <span class="hot">experiments</span>.</p>
         </div>
 
         <!-- Texture, not information — which is why it is mirrored and why
              that costs nothing. The reference reverses whole clusters where
              legibility was never the point; reversing a word someone is
              meant to READ is just a gimmick. -->
-        <p class="frag frag--echo" aria-hidden="true">experiments</p>
+        <p class="frag frag--echo" aria-hidden="true">open source</p>
 
         <!-- THE REVEAL. js/reveal.js builds two layers in here and opens a
              project over the particle field when its card or slot is hovered
@@ -417,9 +423,23 @@
             <template>
             <div class="rv__shots">
               <div class="rv__shot"><img src="assets/shots/praxis-report.webp" width="1920" height="1200"
-                   loading="lazy" decoding="async" alt="Game analysis: every flagged move with its severity, motif and a written explanation."></div>
-              <div class="rv__shot"><img src="assets/shots/praxis-today.webp" width="1920" height="1200"
-                   loading="lazy" decoding="async" alt="Today: the day's focus, its evidence, and the drill deck behind it."></div>
+                   loading="lazy" decoding="async" alt="Game analysis: the win-chance graph, the full move list, and every flagged move with the engine's better move beside it."></div>
+              <div class="rv__shot"><img src="assets/shots/praxis-today.webp" width="1664" height="1248"
+                   loading="lazy" decoding="async" alt="Today: the day's focus with the evidence behind it, the position it came from, and the drill deck counters."></div>
+            </div>
+            </template>
+          </article>
+          <article class="pcard" data-reveal tabindex="0">
+            <b>Redkeep</b>
+            <span>Self-hosted VAPT in an isolated lab.</span>
+            <a href="https://github.com/Tanmay-Anand/Redkeep" target="_blank" rel="noopener"
+               data-scramble><span data-label>view project</span> <i>&rarr;</i></a>
+            <template>
+            <div class="rv__shots">
+              <div class="rv__shot rv__shot--top"><img src="assets/shots/redkeep-dashboard.webp" width="1120" height="1028"
+                   loading="lazy" decoding="async" alt="The launcher: bring the isolated lab up, choose a scope and run a scan, with findings by severity and past reports beside it."></div>
+              <div class="rv__shot rv__shot--top"><img src="assets/shots/redkeep-report.webp" width="1120" height="812"
+                   loading="lazy" decoding="async" alt="A generated report: findings from several scanners in one table, each with its severity, tool and CWE reference."></div>
             </div>
             </template>
           </article>
@@ -432,11 +452,17 @@
             <div class="rv__shots">
               <div class="rv__shot rv__shot--tall"><img src="assets/shots/forte-progress.webp" width="640" height="1422"
                    loading="lazy" decoding="async" alt="Progress: one lift's working weight climbing across eight weeks."></div>
-              <div class="rv__shot rv__shot--tall"><img src="assets/shots/forte-history.webp" width="640" height="1422"
-                   loading="lazy" decoding="async" alt="History: every finished session with its duration, set count and volume."></div>
+              <div class="rv__shot rv__shot--tall"><img src="assets/shots/forte-active.webp" width="640" height="1422"
+                   loading="lazy" decoding="async" alt="A workout in progress: two sets logged, the rest clock counting up, and the next set already filled in from last time."></div>
             </div>
             </template>
           </article>
+        </div>
+
+        <!-- The other three, along the bottom band — the only strip on this
+             screen with no chrome in it. Same card, same size, same weight:
+             the split here is where they sit, not how much they count. -->
+        <div class="disp__slots">
           <article class="pcard" data-reveal tabindex="0">
             <b>Sheaf</b>
             <span>Asks a spreadsheet a question in English. The model plans; it never touches a cell.</span>
@@ -451,12 +477,6 @@
             </div>
             </template>
           </article>
-        </div>
-
-        <!-- The other three, along the bottom band — the only strip on this
-             screen with no chrome in it. Same card, same size, same weight:
-             the split here is where they sit, not how much they count. -->
-        <div class="disp__slots">
           <article class="pcard" data-reveal tabindex="0">
             <b>Vantix</b>
             <span>One schema file becomes the entities, the migrations and the queries.</span>
@@ -487,15 +507,6 @@
             </div>
             </template>
           </article>
-          <article class="pcard" data-reveal tabindex="0">
-            <b>Gremlin</b>
-            <span>Encrypted dumps encoded as video noise, parked on an unlisted channel.</span>
-            <s class="slot">// no public repo yet</s>
-            <template>
-              <p class="rv__desc">Encrypted database dumps, hidden as video noise on an
-                unlisted channel. How far can a medium be misused?</p>
-            </template>
-          </article>
         </div>
       </section>
 
@@ -517,14 +528,6 @@
         <a href="mailto:tanmayanand2002@gmail.com" data-scramble><span data-label>email</span> <i>+</i></a>
       </nav>
     </div>
-    <div class="ftr__notes">
-      <p><i>01</i> Understand the system<br />
-        before changing it.</p>
-      <p><i>02</i> Question the assumptions<br />
-        before implementing them.</p>
-      <p><i>03</i> Build with context.<br />
-        In that order.</p>
-    </div>
     <p class="ftr__foot">TANMAY ANAND <span class="dim">//</span> SILLYWIZARD</p>
   </div>
 
@@ -535,12 +538,7 @@
       <button class="bar__btn" type="button" data-goto="1" data-scramble><span data-label>backend</span> <i>+</i></button>
       <button class="bar__btn" type="button" data-goto="2" data-scramble><span data-label>systems</span> <i>+</i></button>
       <button class="bar__btn" type="button" data-goto="3" data-scramble><span data-label>automation</span> <i>+</i></button>
-      <button class="bar__btn" type="button" data-goto="4" data-scramble><span data-label>experiments</span> <i>+</i></button>
-    </div>
-    <div class="bar__clock">
-      <span class="bar__zone">GMT+5:30</span>
-      <i class="bar__mark"></i>
-      <span class="bar__time" data-clock-time>00:00:00</span>
+      <button class="bar__btn" type="button" data-goto="4" data-scramble><span data-label>open source</span> <i>+</i></button>
     </div>
     <!-- aria-label CONTAINS the visible words, so "click open my git profile"
          still works for voice control, and names the destination as well. -->
@@ -573,7 +571,7 @@
   var mobile = document.documentElement.classList.contains('is-mobile');
   var list = ['lifecycle', 'isolate', 'dormancy', 'hud', 'a11y', 'fps']
     .concat(mobile ? ['reveal', 'phonemath', 'mobile', 'mpager']
-                   : ['tearfn', 'face', 'substrate', 'tear', 'scroll', 'annot', 'reveal', 'loader'])
+                   : ['tearfn', 'face', 'substrate', 'tear', 'scroll', 'flow', 'annot', 'reveal', 'loader'])
     .concat(['boot']);
   for (var i = 0; i < list.length; i++) {
     var s = document.createElement('script');

@@ -80,9 +80,12 @@ describe('the capability gate', () => {
 describe('the static build', () => {
   beforeEach(() => bootSite({ ...PHONE, search: '?static' }));
 
-  it('runs a real clock in the readout', () => {
-    frames(70);                                        // > 1s
-    expect(document.querySelector('[data-m-time]').textContent).toMatch(/^\d\d:\d\d:\d\d$/);
+  it('names the section on screen in the readout, and shows no clock', () => {
+    frames(70);                                        // > 1s: a clock would have ticked
+    const read = document.querySelector('.m-read').textContent;
+    expect(read).toContain('TANMAY ANAND');
+    expect(read).not.toMatch(/\d\d:\d\d:\d\d/);
+    expect(read).not.toMatch(/GMT|UTC/);
   });
 
   it('the nav buttons page to their chapter through the pager', () => {
@@ -133,7 +136,7 @@ describe('the live stage (js/mstage.js)', () => {
     ftr.getBoundingClientRect = () => ({ top: FTR - scrollY, bottom: DOC - scrollY, left: 0, right: 375, width: 375, height: DOC - FTR });
 
     S = window.SUBSTRATE = { progress: 0 };
-    window.SUBSTRATE_PHASES = ['BUILD', 'BACKEND', 'SYSTEMS', 'AUTOMATION', 'EXPERIMENTS'];
+    window.SUBSTRATE_PHASES = ['BUILD', 'BACKEND', 'SYSTEMS', 'AUTOMATION', 'OPEN SOURCE'];
     runScript('mstage');
     window.PAGE.mount(document, ['mstage']);
   });

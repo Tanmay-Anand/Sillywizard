@@ -41,7 +41,7 @@
      1 BACKEND      taking it apart to see why  sliced into plates, offset
      2 SYSTEMS      how the thinking goes       an excavated colony
      3 AUTOMATION   work that runs without me   a network of linked bodies
-     4 EXPERIMENTS  curious, unfinished         wide, soft, low density
+     4 OPEN SOURCE  curious, unfinished         wide, soft, low density
 
      The names are deliberately the site's OWN vocabulary rather than states
      of matter: every one of them is lifted from a line of copy somewhere on
@@ -55,7 +55,7 @@
      shape read by its outline; flat colour fields read by their FILL, and
      at 40k they came out as haze. Still two draw calls. */
   var N = 110000;
-  var PHASES = ['BUILD', 'BACKEND', 'SYSTEMS', 'AUTOMATION', 'EXPERIMENTS'];
+  var PHASES = ['BUILD', 'BACKEND', 'SYSTEMS', 'AUTOMATION', 'OPEN SOURCE'];
   /* How much each phase wanders on its own. SOLID is nearly still and
      DIFFUSE never settles — the drift IS the characterisation. */
   var ENERGY = [0.06, 0.14, 0.30, 0.62, 1.00];

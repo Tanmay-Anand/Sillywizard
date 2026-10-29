@@ -29,8 +29,19 @@ describe('the project bands', () => {
   });
 
   it('holds three in the right column and three along the bottom', () => {
-    expect(cards('.disp__feat').map(nameOf)).toEqual(['Praxis Chess', 'Forte', 'Sheaf']);
-    expect(cards('.disp__slots').map(nameOf)).toEqual(['Vantix', 'GoblinKit', 'Gremlin']);
+    expect(cards('.disp__feat').map(nameOf)).toEqual(['Praxis Chess', 'Redkeep', 'Forte']);
+    expect(cards('.disp__slots').map(nameOf)).toEqual(['Sheaf', 'Vantix', 'GoblinKit']);
+  });
+
+  /* The section is headed OPEN SOURCE. Gremlin - design documents, no
+     repository - came off the page so that every card can back that up. */
+  it('links every project to a public repository or site, with nothing marked unpublished', () => {
+    const all = cards('.disp__feat').concat(cards('.disp__slots'));
+    all.forEach((c) => {
+      expect(c.querySelector('a[href^="https://"]'), nameOf(c)).not.toBeNull();
+      expect(c.querySelector('s.slot'), nameOf(c)).toBeNull();
+    });
+    expect(all.map(nameOf)).not.toContain('Gremlin');
   });
 
   it('makes every one of the six the same kind of card', () => {
@@ -108,9 +119,16 @@ describe('the reveal, from either band', () => {
   });
 
   it('opens a project from the bottom band the same way', () => {
-    hover(cards('.disp__slots')[1]);
-    expect(openLayer().querySelector('.rv__name').textContent).toBe('GoblinKit');
-    // And with its frames: the bottom band is not a second-class entry.
-    expect(openLayer().querySelectorAll('.rv__shot img').length).toBeGreaterThan(0);
+    /* Every card in the band, not one by position - which card sits where
+       changes as projects come and go. */
+    /* The FRONT layer: moving from one card to the next leaves the previous
+       panel open while it fades out behind the new one. */
+    const front = () => document.querySelector('.reveal.is-open.is-front');
+    cards('.disp__slots').forEach((card) => {
+      hover(card);
+      expect(front().querySelector('.rv__name').textContent).toBe(nameOf(card));
+      // And with its frames: the bottom band is not a second-class entry.
+      expect(front().querySelectorAll('.rv__shot img').length, nameOf(card)).toBeGreaterThan(0);
+    });
   });
 });

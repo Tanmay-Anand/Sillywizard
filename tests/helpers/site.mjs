@@ -69,7 +69,7 @@ export function loadPage({ width = 1440, height = 900, search = '', reducedMotio
 export function resetGlobals() {
   ['PAGE', 'OFF', 'DORMANT', 'SUBSTRATE', 'SUBSTRATE_PHASES', 'PHONE_MATH', 'GOTO',
    'M_GOTO', 'M_STATIC', 'TEAR_GLSL', 'TEAR_EDGE', 'TEAR_LIGHT', 'TEAR_RED',
-   'FACE_GEOM'].forEach((k) => { try { delete window[k]; } catch (e) { window[k] = undefined; } });
+   'FACE_GEOM', 'FLOW_MATH', 'FLOW_STEP', 'SCROLL'].forEach((k) => { try { delete window[k]; } catch (e) { window[k] = undefined; } });
   vi.restoreAllMocks();
 }
 

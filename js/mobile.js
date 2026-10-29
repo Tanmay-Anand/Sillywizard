@@ -17,8 +17,8 @@
    instrument panel, js/loader.js, js/annot.js, js/face.js.
 
    WHAT SURVIVES, because it is the site rather than the effects: the type
-   scale, the microtype, the red, the copy, the tone, the bar, and a real
-   clock. The telemetry is genuine here too — the same rule as the desktop
+   scale, the microtype, the red, the copy, the tone, and the bar. What
+   readouts remain are genuine here too — the same rule as the desktop
    HUD. A phone build that fakes its readouts would be the one place the
    whole conceit is obviously a costume.
 
@@ -32,7 +32,6 @@ window.PAGE.register('mobile', function (scope) {
 
   var root      = document.documentElement;
   var readPhase = scope.querySelector('[data-m-phase]');
-  var readTime  = scope.querySelector('[data-m-time]');
   var panes     = Array.prototype.slice.call(scope.querySelectorAll('.pane'));
   var lightZone = scope.querySelector('.pane--field');
 
@@ -192,22 +191,6 @@ window.PAGE.register('mobile', function (scope) {
   }
   if (!live) startStatic();
 
-  /* ---- a real clock, same as the desktop bar ---------------------------- */
-  var fmt;
-  try {
-    fmt = new Intl.DateTimeFormat('en-GB', {
-      timeZone: 'Asia/Kolkata', hour: '2-digit', minute: '2-digit',
-      second: '2-digit', hour12: false
-    });
-  } catch (e) { fmt = null; }
-
-  var barTime = scope.querySelector('[data-clock-time]');
-  var timer = setInterval(function () {
-    var t = fmt ? fmt.format(new Date()) : '--:--:--';
-    if (readTime) readTime.textContent = t;
-    if (barTime) barTime.textContent = t;
-  }, 1000);
-
   /* The bar's phase buttons scroll to their section instead of driving an
      accumulator that does not exist on this build. */
   var btns = scope.querySelectorAll('[data-goto]');
@@ -225,7 +208,6 @@ window.PAGE.register('mobile', function (scope) {
   return function () {
     observers.forEach(function (o) { if (o) o.disconnect(); });
     window.M_STATIC = null;
-    clearInterval(timer);
     Array.prototype.forEach.call(btns, function (b) { b.removeEventListener('click', onGoto); });
   };
 });

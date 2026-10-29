@@ -26,15 +26,17 @@ real network, a real training log or a real workbook on a public page.
 |---|---|---|---|
 | `contractsentinel-overview.webp` | ContractSentinel | Service overview: contract health per service, worst first, with live traces and latency | five invented services, served to the page by intercepting its API calls |
 | `contractsentinel-drift.webp` | ContractSentinel | Contract changes, each with severity and the callers it affects | same |
-| `carta-map.webp` | Carta | The survey map with a device selected, every claim shown beside its evidence | a synthetic snapshot file of a fictional `192.168.10.0/24`. **No real network was surveyed** |
-| `carta-findings.webp` | Carta | What the survey concluded, each finding marked with how strongly it is held | same |
+| `carta-map.webp` | Carta | The desktop survey map with a device selected, every claim shown beside its evidence | a synthetic snapshot file of a fictional `192.168.10.0/24`. **No real network was surveyed** |
+| `carta-phone.webp` | Carta | The same survey below 760px: the map fills the screen and the device sits in a sheet that slides up from the bottom | same |
 | `praxis-report.webp` | Praxis Chess | Game analysis: nine flagged moves with severity, motif, engine best move and a written explanation | the capture set from the Praxis Chess site, taken against its demo library |
 | `praxis-today.webp` | Praxis Chess | Today: the day's focus with its evidence, the deck counters and the streak | same |
 | `forte-progress.webp` | Forte | One lift's working weight climbing across eight weeks | a temporary seed written into a throwaway SQLite database on an emulator |
-| `forte-history.webp` | Forte | Every finished session with its duration, set count and volume | same |
+| `forte-active.webp` | Forte | A workout in progress: two sets logged, the rest clock counting up, the next set filled in from last time | the same throwaway database, then two sets logged by hand on the emulator |
 | `sheaf-plan.webp` | Sheaf | A question compiled into a typed plan you can read before it runs | a stand-in plan response, supplied to the task pane by the capture script |
 | `sheaf-ask.webp` | Sheaf | The task pane with a question typed and not yet planned | same |
 | `goblinkit-canvas.webp` | GoblinKit | The editor: an order-triage workflow drawn as boxes and arrows, with a branch, a loop and a merge | the repository's own `examples/order-triage.json`, opened in the canvas |
+| `redkeep-dashboard.webp` | Redkeep | The launcher: the isolated lab, a scan's scope and profile, findings by severity over five runs, and past reports | the Redkeep repository's own `docs/images/ui-dashboard.png`. Every target is its sealed lab copy (`juice-shop`); no real system was scanned |
+| `redkeep-report.webp` | Redkeep | One generated report: findings from ZAP, nuclei and Nmap in one table with severity, tool and CWE | the repository's own `docs/images/ui-report.png`, a report on the lab's example app; the only address in it is a private Docker one |
 
 ## The two that are not captures
 
@@ -42,9 +44,16 @@ real network, a real training log or a real workbook on a public page.
 |---|---|---|
 | `vantix-logo.webp` | Vantix | The wordmark, from `Vantix/vantix-logo-solid.png`. The CLI and Studio are still scaffolding - `vantix` prints its usage and the Studio boots an empty context - so the mark stands in rather than a screenshot of a help message. It is framed as a mark (`.rv__shot--mark`), never cropped. |
 
-**Gremlin** has nothing here at all: planning documents only, "no code until
-milestones are approved". It carries its description alone rather than an empty
-frame.
+Gremlin was on the page with no capture and no repository, as a description
+alone. It came off when the section became OPEN SOURCE: it was the one card
+with no public code to point at.
+
+## When each was taken
+
+The Carta, Forte and Praxis Chess frames were re-taken on 2026-10-28 against the
+current builds: Carta had gained a phone layout, Forte an Active Workout screen
+and a restyle, and Praxis Chess a redesign. The Praxis pair is the Praxis Chess
+site's own capture set, re-shot there on 2026-10-20.
 
 ## Format
 
