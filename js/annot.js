@@ -56,6 +56,19 @@ window.PAGE.register('annot', function (scope) {
      bar buttons and the anchors resolving one per frame at mount. */
   var HOT_EASE = 0.20;
 
+  /* ONE QUESTION AT A TIME (SYSTEMS, js/flow.js). A pane holding a
+     [data-flow] slot shows a single leader: from the node of whichever
+     question js/flow.js has marked .is-on, to the slot. Everything else in
+     this file is untouched for every other pane.
+
+     SWAP_MS is how long the node end takes to travel to the next question's
+     node. The slot end does not move at all. Under reduced motion it is 0. */
+  var SWAP_MS = 180;
+  /* The line stops this far short of the question, so it points at the
+     words rather than running into them. */
+  var FLOW_GAP = 14;
+  var reduced = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : null;
+
   /* A HOLE IN THE LEADERS WHERE THE POINTER HAS OPENED ONE.
 
      The reveal cuts through the object; a leader line drawn straight across
@@ -109,6 +122,7 @@ window.PAGE.register('annot', function (scope) {
       /* Which phase's geometry these anchors belong to — the pane already
          declares it, and a pin has to be picked out of the right shell. */
       var phase = +(pane.getAttribute('data-phase') || 0);
+      var flow = pane.querySelector('[data-flow]');
       var items = blocks.map(function (el) {
         /* ---- A ROUTE: several points on the subject, walked in order ----
            data-route="x,y,z x,y,z ..." lists nodes from the ORIGIN, deep in
@@ -150,7 +164,11 @@ window.PAGE.register('annot', function (scope) {
         var line = document.createElementNS(NS, 'line');
         line.setAttribute('class', end ? 'annot__line annot__line--end' : 'annot__line');
         var dot = document.createElementNS(NS, 'circle');
-        dot.setAttribute('class', 'annot__dot');
+        /* In a one-at-a-time pane every node keeps its dot, and the dots are
+           what show the eight stops; only the active one is lit. */
+        dot.setAttribute('class', flow ? (end ? 'annot__dot annot__dot--q annot__dot--end'
+                                              : 'annot__dot annot__dot--q')
+                                       : 'annot__dot');
         dot.setAttribute('r', '2');
         mk.layer.appendChild(line);
         mk.layer.appendChild(dot);
@@ -173,10 +191,28 @@ window.PAGE.register('annot', function (scope) {
         };
       });
       rigs.push({ pane: pane, svg: svg, mk: mk, items: items,
-                  running: false, raf: 0, hot: [], amp: 0, t: 0 });
+                  running: false, raf: 0, hot: [], amp: 0, t: 0,
+                  /* One-at-a-time state. `attach` is the slot end of the
+                     line in this svg's coordinates: the slot and the svg sit
+                     in the same pane and scroll together, so it is a
+                     constant, measured once and again only on resize or
+                     when the fonts land. */
+                  flow: flow, say: flow && flow.querySelector('.flow__say'),
+                  attach: null, active: -1, swapAt: 0, from: null, drawn: null });
     });
 
   if (!rigs.length) return;
+
+  /* The slot end of the line: the left edge of the question, level with its
+     FIRST line, so the attachment does not jump when a question wraps. */
+  function measureAttach(rig, host) {
+    var b = rig.say.getBoundingClientRect();
+    var lh = parseFloat(getComputedStyle(rig.say).lineHeight) || 20;
+    rig.attach = { x: b.left - host.left - FLOW_GAP, y: b.top - host.top + lh / 2 };
+  }
+  function dropAttach() { rigs.forEach(function (r) { r.attach = null; }); }
+  window.addEventListener('resize', dropAttach);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(dropAttach);
 
   function step(rig) {
     if (!rig.running) { rig.raf = 0; return; }
@@ -223,6 +259,37 @@ window.PAGE.register('annot', function (scope) {
     rig.hot = [];
 
     var solved = 0;
+
+    /* ONE AT A TIME: which question is live, and has it just changed? */
+    var act = -1, so = 1;
+    if (rig.flow) {
+      /* The leader, the nodes and the lit patch come and go WITH the slot:
+         js/flow.js shows it only once the section has landed, and a line
+         to a box that is not there yet points at nothing. */
+      so = parseFloat(getComputedStyle(rig.flow).opacity);
+      if (!(so >= 0)) so = 1;
+      for (var k = 0; k < rig.items.length; k++) {
+        if (rig.items[k].el.classList.contains('is-on')) { act = k; break; }
+      }
+      if (act !== rig.active) {
+        rig.from = rig.drawn;            // travel from where the line ends now
+        rig.swapAt = now;
+        rig.active = act;
+      }
+      if (!rig.attach && rig.say) measureAttach(rig, host);
+      /* The live question's particle first. One pin is resolved per frame,
+         and the node being looked at should not wait behind seven that are
+         not - until it is pinned its line uses the analytic seed. */
+      var ai = act >= 0 ? rig.items[act] : null;
+      if (ai && ai.pin < 0) {
+        if (ai.end && typeof S.pinLowest === 'function') {
+          ai.pin = S.pinLowest(ai.phase); solved = 1;
+        } else if (ai.a && typeof S.pin === 'function') {
+          ai.pin = S.pin(ai.a[0], ai.a[1], ai.a[2], ai.phase); solved = 1;
+        }
+      }
+    }
+
     rig.items.forEach(function (it) {
       if (it.route) { solved = drawRoute(it, S, host, solved); return; }
 
@@ -266,7 +333,10 @@ window.PAGE.register('annot', function (scope) {
         it.line.setAttribute('opacity', '0');
         it.dot.setAttribute('opacity', '0'); return;
       }
-      rig.hot.push([a[0], a[1], a[2], rig.amp]);
+      var live = !rig.flow || it === rig.items[act];
+      /* In a one-at-a-time pane only the question being asked lights its
+         patch of the colony; the other seven would be answers to nothing. */
+      if (live) rig.hot.push([a[0], a[1], a[2], rig.amp * so]);
 
       var p = S.project(a[0], a[1], a[2]);
       /* isFinite as well as null: a projection can come back with NaN if the
@@ -276,8 +346,16 @@ window.PAGE.register('annot', function (scope) {
         it.line.setAttribute('opacity', '0');
         it.dot.setAttribute('opacity', '0'); return;
       }
-      it.line.setAttribute('opacity', '1');
-      it.dot.setAttribute('opacity', '1');
+      it.line.setAttribute('opacity', live ? String(so) : '0');
+      if (rig.flow) {
+        /* All eight stops stay on the colony as small dim dots; the live one
+           is larger and lit - ink, or red for the conclusion (site.css). */
+        it.dot.setAttribute('opacity', String(live ? so : 0.35 * so));
+        it.dot.setAttribute('r', live ? '3' : '1.6');
+        it.dot.classList.toggle('is-on', live);
+      } else {
+        it.dot.setAttribute('opacity', '1');
+      }
 
       /* INTO THE SVG'S OWN COORDINATES, WHICH ARE NOT THE VIEWPORT'S.
 
@@ -294,6 +372,30 @@ window.PAGE.register('annot', function (scope) {
          upward one way, downward the other. The line's OTHER end and the
          reveal mask were already converted; this end was not. */
       var ex = p.x - host.left, ey = p.y - host.top;
+
+      if (rig.flow) {
+        it.dot.setAttribute('cx', ex.toFixed(1));
+        it.dot.setAttribute('cy', ey.toFixed(1));
+        if (!live || !rig.attach) return;
+        /* THE NODE END MOVES; THE SLOT END NEVER DOES. On a change of
+           question the end travels from where the line ended to the new
+           node over SWAP_MS, eased out - and it chases the node's LIVE
+           position the whole way, so it lands on the node rather than on
+           where the node was when the change began. After that it is
+           exactly the node, every frame, while the colony turns. */
+        var t = (rig.from && !(reduced && reduced.matches))
+          ? Math.min(1, (now - rig.swapAt) / SWAP_MS) : 1;
+        var e = 1 - (1 - t) * (1 - t) * (1 - t);
+        var nx = t < 1 ? rig.from.x + (ex - rig.from.x) * e : ex;
+        var ny = t < 1 ? rig.from.y + (ey - rig.from.y) * e : ey;
+        if (t >= 1) rig.from = null;
+        rig.drawn = { x: nx, y: ny };
+        it.line.setAttribute('x1', rig.attach.x.toFixed(1));
+        it.line.setAttribute('y1', rig.attach.y.toFixed(1));
+        it.line.setAttribute('x2', nx.toFixed(1));
+        it.line.setAttribute('y2', ny.toFixed(1));
+        return;
+      }
 
       /* The line leaves the block from the edge FACING the subject, at the
          block's own vertical centre. Leaving from a corner reads as a box
@@ -401,6 +503,7 @@ window.PAGE.register('annot', function (scope) {
 
   return function teardown() {
     io.disconnect();
+    window.removeEventListener('resize', dropAttach);
     rigs.forEach(function (rig) {
       rig.running = false;
       if (rig.raf) cancelAnimationFrame(rig.raf);

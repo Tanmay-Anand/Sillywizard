@@ -1,5 +1,5 @@
 /* ==========================================================================
-   reveal.js — EXPERIMENTS: a project surfaces over the living field.
+   reveal.js — OPEN SOURCE: a project surfaces over the living field.
 
    Hovering (or focusing) a project opens a foreground panel ON TOP of the
    particle structure, through a soft expanding wave. Nothing here touches
@@ -41,7 +41,7 @@ window.PAGE.register('reveal', function (scope) {
 
   var PHONE = document.documentElement.classList.contains('is-mobile');
 
-  /* One instance per pane that asks for one. EXPERIMENTS opens a project over
+  /* One instance per pane that asks for one. OPEN SOURCE opens a project over
      the dispersing field; AUTOMATION opens one over the globe. They share this
      code and nothing else: each has its own layers, its own items, and its own
      idea of which project is open. */

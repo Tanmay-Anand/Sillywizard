@@ -90,7 +90,7 @@ def check_paths():
 # THE ONE THAT NEARLY BIT. js/hud.js registers BOTH 'hud' and 'chrome', and
 # the phone mounts 'chrome' for the bottom bar. Splitting scripts by build on
 # the assumption that a file named hud.js is desktop-only silently removes
-# the bar and the clock, on mobile only, with no error anywhere.
+# the bar, on mobile only, with no error anywhere.
 def check_registry():
     registered = {}
     for f in JS:

@@ -1,10 +1,9 @@
 /* ==========================================================================
    hud.js — the instruments.
 
-   EVERY NUMBER ON SCREEN IS REAL. The clock is a real clock in Asia/Kolkata,
-   the coordinates are the real pointer, the point count is the real point
-   count, uptime is real uptime, and coherence is derived from the substrate's
-   actual phase energy. Nothing here is a decorative digit rolling for effect.
+   EVERY NUMBER ON SCREEN IS REAL. The coordinates are the real pointer, the
+   point count is the real point count, and coherence is derived from the
+   substrate's actual phase energy. Nothing here is a decorative digit rolling for effect.
 
    That is what buys the tone. The readouts are trustworthy, so when one of
    them says something it has no business saying, it lands as an observation
@@ -19,8 +18,6 @@ window.PAGE.register('hud', function (scope) {
   var dot = $('[data-hud-dot]');
   var elPhase = $('[data-hud-phase]'), elState = $('[data-hud-state]');
   var elCoh = $('[data-hud-coh]');
-  var elUp = $('[data-hud-uptime]');
-  var elTime = $('[data-clock-time]');
   var elProgN = $('[data-hud-progn]'), elProgBar = $('[data-hud-progbar]');
 
   var PHASES = window.SUBSTRATE_PHASES || [];
@@ -29,36 +26,18 @@ window.PAGE.register('hud', function (scope) {
      rewrote itself on every phase change and every ten seconds or so -
      removed at the owner's request, along with everything that fed it: the
      per-phase lines, the ambient lines and the coherence thresholds. The
-     readouts that remain (phase, state, coherence, uptime, scroll) are
-     unchanged. */
+     readouts that remain (phase, state, coherence, scroll) are unchanged.
+     OBSERVER and UPTIME went the same way, also at the owner's request. */
 
   /* ---- pointer ----------------------------------------------------------- */
   var mx = 0, my = 0;
   function onMove(e) { mx = e.clientX; my = e.clientY; }
   window.addEventListener('pointermove', onMove);
 
-  /* ---- clock -------------------------------------------------------------
-     Real Asia/Kolkata time via Intl, not an offset applied to the local
-     clock — the latter is wrong for half the year in half the world. */
-  var fmt;
-  try {
-    fmt = new Intl.DateTimeFormat('en-GB', {
-      timeZone: 'Asia/Kolkata', hour: '2-digit', minute: '2-digit',
-      second: '2-digit', hour12: false
-    });
-  } catch (e) { fmt = null; }
-
-  var t0 = Date.now();
-  function pad(n, w) { return String(n).padStart(w, '0'); }
-
-  var clockTimer = setInterval(function () {
-    if (elTime) elTime.textContent = fmt ? fmt.format(new Date()) : '--:--:--';
-    if (elUp) {
-      var s = Math.floor((Date.now() - t0) / 1000);
-      elUp.textContent = pad(Math.floor(s / 3600), 2) + ':' +
-                         pad(Math.floor(s / 60) % 60, 2) + ':' + pad(s % 60, 2);
-    }
-  }, 1000);
+  /* NO WALL CLOCK. The bar used to show a live local time and its UTC
+     offset, which told every visitor roughly where the owner lives - removed
+     at the owner's request, as was the uptime counter that replaced it. */
+  function pad(n, w) { return String(n).padStart(w, '0'); }   // the SCROLL readout
 
 
   /* ---- the frame --------------------------------------------------------- */
@@ -112,7 +91,6 @@ window.PAGE.register('hud', function (scope) {
 
   return function teardown() {
     cancelAnimationFrame(raf);
-    clearInterval(clockTimer);
     window.removeEventListener('pointermove', onMove);
   };
 });

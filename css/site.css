@@ -141,7 +141,6 @@ body.is-light .hud__mini{ filter:invert(1); }
 .hud__row b[data-hud-phase]{ color:var(--red); }
 /* The falling number, and the state it drags with it. */
 .hud__row b.is-low{ color:var(--red); }
-.hud__rule{ height:1px; background:var(--line); margin:8px 0; }
 
 .hud__edge{ position:absolute; top:50%; margin:0; color:var(--label); white-space:nowrap; }
 .hud__edge--l{ left:var(--inset);  transform:translateY(-50%) rotate(180deg);
@@ -150,7 +149,12 @@ body.is-light .hud__mini{ filter:invert(1); }
                   Still inside the rail - 18px of line box, well short of
                   --chrome-l, where the content starts. */
                font-size:12px; letter-spacing:.3em;
-               writing-mode:vertical-rl; }
+               writing-mode:vertical-rl;
+               /* Body-copy grey, not --label. At --label it measured 3.4:1
+                  on the dark ground and 2.9:1 on the light one - below the
+                  4.5:1 that readable text needs - so the one name always on
+                  screen read as a watermark. --fog is 9.2:1 on dark. */
+               color:var(--fog); }
 .hud__edge--r{ right:var(--inset); transform:translateY(-50%);
                writing-mode:vertical-rl; }
 
@@ -225,6 +229,8 @@ body.is-light .hud__mini{ filter:invert(1); }
    Almost nothing on screen. The emptiness IS the composition, and it is
    what gives the next four screens something to break. */
 .pane--void{ display:grid; align-content:center; }
+/* The name sits on the same left edge as the statement it introduces. */
+.void__idx{ padding-left:var(--chrome-l); }
 .void__say{
   /* --chrome-l, not --inset: the rail owns the first 52px, and at --inset
      the "I" of "I build" sat on top of the vertical name. */
@@ -256,6 +262,10 @@ body.is-light .hud__mini{ filter:invert(1); }
 }
 .annot__line{ stroke:var(--leader); stroke-width:1; }
 .annot__dot{ fill:var(--red); }
+/* SYSTEMS' nodes, one lit at a time (js/annot.js sets size and dimming per
+   frame): ink for a question, red for the conclusion. */
+.annot__dot--q{ fill:var(--ink); }
+.annot__dot--q.annot__dot--end.is-on{ fill:var(--red); }
 /* The one leader that is not an observation. Still a hairline, but in the
    colour of the statement it belongs to, so the eye can follow it from the
    words to the last point of the structure without hunting. */
@@ -282,56 +292,86 @@ body.is-light .hud__mini{ filter:invert(1); }
    cannot grow up into the map or down into the log stack. */
 .pane--ledger{ display:flex; align-items:center; justify-content:space-between;
                padding:var(--chrome-t) 0 var(--chrome-b); }
-/* ANCHORED TO THE BOTTOM, so it grows UPWARD into space the left-hand
-   questions have left for it (they stop at 47%) instead of downward into
-   the log. Measured at 1280x720, the shortest window this is built for, it
-   still clears the last left question. */
+/* ANCHORED TO THE BOTTOM, so it grows UPWARD rather than down into the log.
+   Nothing shares the left half with it any more: the questions are one slot
+   on the right of the colony (THE FLOW, below). */
 .ledger__lede{
   position:absolute; left:var(--chrome-l); bottom:calc(var(--chrome-b) + 18px);
   width:min(36vw, 560px);
 }
 .ledger__lede .lede__desc{ max-width:none; }
 
-/* ---- THE FLOW ------------------------------------------------------------
-   Eight questions, four in each gutter, each one a callout onto the colony.
-   Same arrangement as 02 and for the same reason: a block of copy, a thin
-   line, a point on the thing itself.
+/* ---- THE FLOW: ONE QUESTION AT A TIME -----------------------------------
+   One slot to the right of the colony, driven by js/flow.js, instead of eight
+   callouts scattered round it - four a side crowded the statement and lost
+   the order, which is the only thing the eight are for. Top to bottom: a
+   counter, the question being asked, eight bars for where it falls in the
+   sequence, and all eight as a faint numbered list for a reader who scrolls
+   past faster than the steps change.
 
-   NO NUMBERS. They were a column of red digits restating an order the list
-   already has, and over eight short lines that reads as a parts index
-   rather than a train of thought.
-
-   Pinned to the channel rather than the window, so the leaders are as short
-   as the drawing allows. */
-/* SCATTERED ON PURPOSE, WITHIN LIMITS. An evenly gapped column on each side
-   made eight observations into a form with two columns. Each question now
-   carries its own height (--y, a share of the screen) and its own drift
-   toward or away from the subject (--dx), set in the markup beside the text
-   it moves. The columns still own the side and the alignment, so every line
-   keeps the edge that faces the subject and the page cannot scatter further
-   than the channel allows. */
+   PLACED FROM THE CHANNEL, NOT FROM PIXELS. --chan is what sizes the colony,
+   so the slot's left edge is the expression the right-hand questions always
+   used, and it moves with the subject at every width. The width keeps at
+   least 48px off the window's right edge. Centred vertically, which keeps it
+   clear of the HUD above and the SCROLL readout below. */
 .flow{
-  position:absolute; top:0; bottom:0; width:min(330px, 24vw);
-  font-family:var(--font-mono); font-size:var(--ui-10);
-  letter-spacing:var(--track-ui); text-transform:uppercase;
-}
-.flow--l{ right:calc(50% + var(--chan) / 2 - 2vw); text-align:right; }
-.flow--r{ left:calc(50% + var(--chan) / 2 - 2vw); text-align:left; }
-.flow p, .flow__end{
-  position:absolute; top:var(--y); left:0; right:0; margin:0;
-  color:var(--ink); font-size:12px; letter-spacing:.05em; line-height:1.5;
-  translate:var(--dx, 0) -50%;
-}
-/* --dx is a plain rightward nudge, not "toward the subject": on the left
-   side positive moves a question closer, on the right it moves it away. */
-
-/* THE CONCLUSION. Same typeface as the questions, so it reads as the end of
-   the same sentence rather than a slogan; red, a size up and opened out, so
-   it reads as the end. Its leader is red as well (see .annot__line--end). */
-.flow__end{
-  left:calc(50% + var(--chan) / 2 - 2vw); right:auto; width:min(330px, 24vw);
+  position:absolute; top:50%; translate:0 -50%;
+  left:calc(50% + var(--chan) / 2 - 2vw);
+  width:min(360px, calc(50% - var(--chan) / 2 + 2vw - 48px));
   font-family:var(--font-mono); text-transform:uppercase;
-  color:var(--red); font-size:13px; letter-spacing:.14em;
+  /* DIM, BUT STILL READABLE. --label on this dark ground is #636363, which
+     is 3.35:1 - too faint for words anyone is meant to read. Fog pulled 22%
+     toward the ground is about #8a8a8a: 5.8:1, and still clearly behind
+     the ink of the live question. */
+  --flow-dim:color-mix(in srgb, var(--fog) 78%, var(--ground));
+}
+.flow__count{
+  margin:0; color:var(--flow-dim);
+  font-size:var(--ui-10); letter-spacing:var(--track-ui);
+}
+.flow__count .dim{ color:inherit; }
+/* TWO LINES RESERVED, so a short question and a long one take the same box
+   and nothing under it moves when the text changes. A size up from the 12px
+   the scattered callouts used: it is the only one on screen now. */
+.flow__say{
+  position:relative; margin:10px 0 0; height:calc(2 * 1.45em);
+  color:var(--ink); font-size:14px; letter-spacing:.06em; line-height:1.45;
+}
+/* The crossfade: two layers in one box, js/flow.js swaps which is on. */
+.flow__ink{
+  position:absolute; left:0; top:0; right:0;
+  opacity:0; transition:opacity 170ms linear;
+}
+.flow__ink.is-on{ opacity:1; }
+.flow__bars{ display:flex; gap:5px; margin:14px 0 0; }
+.flow__bars i{
+  flex:0 0 22px; height:2px; background:var(--line);
+  transition:background-color 170ms linear;
+}
+.flow__bars i.is-on{ background:var(--ink); }
+
+/* THE LIST. Numbered by a CSS counter rather than in the text, so the
+   question is the text and the list gives it its place. role="list" in the
+   markup: Safari drops list semantics from a list with list-style:none. */
+.flow__list{
+  margin:24px 0 0; padding:0; list-style:none; counter-reset:flowq;
+  color:var(--flow-dim); font-size:var(--ui-10); letter-spacing:var(--track-ui);
+  line-height:1.95;
+}
+.flow__list li{ counter-increment:flowq; transition:color 170ms linear; }
+.flow__list li::before{
+  content:counter(flowq, decimal-leading-zero); display:inline-block; width:3.4ch;
+}
+.flow__list li.is-on{ color:var(--ink); }
+
+/* THE CONCLUSION is red everywhere it appears: the question, its bar, its
+   line of the list, and (below) its leader and its node. */
+.flow.is-end .flow__say{ color:var(--red); }
+.flow.is-end .flow__bars i:last-child{ background:var(--red); }
+.flow__list .flow__end.is-on{ color:var(--red); }
+
+@media (prefers-reduced-motion: reduce){
+  .flow__ink, .flow__bars i, .flow__list li{ transition:none; }
 }
 
 /* ======================= 04 · AUTOMATION =================================
@@ -367,7 +407,11 @@ body.is-light .hud__mini{ filter:invert(1); }
   font-family:var(--font-mono); font-size:13px;
   letter-spacing:var(--track-ui); text-transform:uppercase;
 }
-.auto__out span{
+/* DIRECT CHILD ONLY. The link inside a callout carries its own
+   <span data-label> for the scramble effect, and an unscoped rule here made
+   that span display:block too - which pushed the arrow onto a line of its
+   own, on both builds, where it read as a stray character. */
+.auto__out > span{
   display:block; margin-top:8px; color:var(--fog);
   font-size:15px; line-height:1.35;
 }
@@ -376,6 +420,17 @@ body.is-light .hud__mini{ filter:invert(1); }
   font-family:var(--font-mono); font-size:var(--ui-10);
   letter-spacing:var(--track-ui); text-transform:uppercase;
 }
+/* The same treatment for a project that HAS a repository. Without it the link
+   inherits body copy, and "view project" and its arrow break across two lines
+   - the arrow then reads as a stray character rather than as part of the
+   control. nowrap keeps them one thing. */
+.auto__out a{
+  display:inline-block; margin-top:10px; white-space:nowrap;
+  color:var(--label); font-family:var(--font-mono); font-size:var(--ui-10);
+  letter-spacing:var(--track-ui); text-transform:uppercase;
+  transition:color 160ms linear;
+}
+.auto__out:hover a, .auto__out:focus-within a{ color:var(--red); }
 .field__mid{ position:absolute; left:var(--chrome-l); bottom:calc(var(--chrome-b) + 18px);
              width:min(34vw, 520px); }
 
@@ -574,6 +629,17 @@ body.is-light .hud__mini{ filter:invert(1); }
 .rv__shots > :only-child{ grid-column:1 / -1; }
 .rv__shot--mark{ aspect-ratio:21 / 9; background:none; }
 .rv__shot--mark img{ object-fit:contain; }
+/* A project that ships two layouts shows both, side by side and named. The
+   two captures have nothing like the same shape - 16:10 against 9:19.5 - so
+   neither one fills its frame: they share one box and sit inside it, which
+   makes the difference in shape read as the point rather than as a fault. */
+.rv__pane{ margin:0; display:flex; flex-direction:column; gap:7px; }
+.rv__cap{
+  font-family:var(--font-mono); font-size:var(--ui-10);
+  letter-spacing:var(--track-ui); text-transform:uppercase; color:var(--label);
+}
+.rv__shot--fit{ aspect-ratio:4 / 5; }
+.rv__shot--fit img{ object-fit:contain; }
 .rv__link{
   display:inline-block; margin-top:16px; text-decoration:none;
   font-family:var(--font-mono); font-size:var(--ui-10);
@@ -713,14 +779,6 @@ body.is-light .hud__mini{ filter:invert(1); }
 .ftr__nav a i{ color:#0a0a0a; }
 .ftr__nav a:hover,.ftr__nav a:hover i{ color:#fff; }
 
-.ftr__notes{
-  display:flex; gap:64px;
-  font-family:var(--font-mono); font-size:var(--ui-10);
-  letter-spacing:var(--track-ui); text-transform:uppercase; line-height:1.85;
-}
-/* 28px, not 20: the numbers are two digits now (01-03). */
-.ftr__notes p{ margin:0; position:relative; padding-left:28px; }
-.ftr__notes i{ position:absolute; left:0; font-style:normal; }
 .ftr__foot{ margin:0; font-family:var(--font-mono); font-size:var(--ui-10);
             letter-spacing:var(--track-ui); text-transform:uppercase; }
 .ftr .dim{ opacity:.45; color:inherit; }
@@ -757,13 +815,6 @@ body.is-light .bar{ background:rgba(240,240,236,.80); }
 .bar__btn:hover,.bar__git:hover,
 .bar__btn:hover i,.bar__git:hover i{ color:var(--red); }
 .bar__btn.is-on,.bar__btn.is-on i{ color:var(--red); }
-.bar__clock{
-  display:flex; align-items:center; gap:8px;
-  font-family:var(--font-mono); font-size:var(--ui-10);
-  letter-spacing:var(--track-ui); color:var(--fog);
-}
-.bar__zone{ color:var(--label); }
-.bar__mark{ width:4px; height:4px; background:var(--red); border-radius:50%; }
 
 /* ================================ LOADER =================================
    Corner-anchored blocks, not a centred stack — the reference's own layout

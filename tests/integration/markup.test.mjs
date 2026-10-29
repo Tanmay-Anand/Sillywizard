@@ -81,17 +81,18 @@ describe('the footer signature', () => {
   });
 });
 
-describe('the footer notes', () => {
-  it('reads as three numbered principles, in order', () => {
-    const notes = $$('.ftr__notes p').map((p) => ({
-      n: text(p.querySelector('i')),
-      body: text(p).replace(/^\d+\s*/, ''),
-    }));
-    expect(notes).toEqual([
-      { n: '01', body: 'Understand the system before changing it.' },
-      { n: '02', body: 'Question the assumptions before implementing them.' },
-      { n: '03', body: 'Build with context. In that order.' },
-    ]);
+/* THE THREE PRINCIPLES ARE GONE. "Understand the system before changing it"
+   and its two siblings restated what SYSTEMS already argues four screens
+   earlier, less vividly. The footer is the contact links and the signature. */
+describe('the footer', () => {
+  it('carries no list of principles', () => {
+    expect(document.querySelector('.ftr__notes')).toBeNull();
+    expect(document.querySelector('#ftr').textContent).not.toMatch(/in that order/i);
+  });
+
+  it('goes straight from the links to the signature', () => {
+    expect(document.querySelector('.ftr__foot').previousElementSibling
+      .querySelector('.ftr__nav')).not.toBeNull();
   });
 });
 
@@ -113,6 +114,84 @@ describe('the bar', () => {
   it('no longer offers to copy the email address', () => {
     expect(document.querySelector('[data-copy-email]')).toBeNull();
     expect(read('js/hud.js')).not.toContain('data-copy-email');
+  });
+});
+
+/* WHOSE SITE THIS IS. The name used to live only in a hidden <h1>, a dim
+   vertical label on the rail (3.4:1 on dark, 2.9:1 on light - below the
+   4.5:1 readable text needs) and the last line of the footer. */
+describe('the owner is named where people look', () => {
+  it('names the owner and role on the first screen, right above the opening line', () => {
+    const idx = document.querySelector('.pane--void .lede__idx');
+    expect(idx).not.toBeNull();
+    expect(text(idx)).toBe('TANMAY ANAND // BACKEND & SYSTEMS ENGINEER');
+    expect(idx.nextElementSibling.tagName).toBe('H2');
+    expect(idx.closest('.vh')).toBeNull();
+  });
+
+  it('puts the name in the browser tab, first, so a narrow tab keeps it', () => {
+    // from the file: the test page is built from <body>, so document.title is empty here
+    expect(/<title>([^<]*)<\/title>/.exec(read('index.html'))[1]).toBe('Tanmay Anand // SILLYWIZARD');
+  });
+
+  it('writes the edge signature in body-copy grey, not the dimmest grey on the page', () => {
+    expect(read('css/site.css')).toMatch(/\.hud__edge--l\{[^}]*color:var\(--fog\)/);
+  });
+});
+
+/* THE HUD READS PHASE, STATE AND COHERENCE - and stops there. The
+   OBSERVER / UPTIME pair beneath a rule was removed at the owner's request. */
+describe('the HUD readout', () => {
+  it('keeps phase, state and coherence', () => {
+    ['[data-hud-phase]', '[data-hud-state]', '[data-hud-coh]']
+      .forEach((sel) => expect(document.querySelector(sel), sel).not.toBeNull());
+  });
+
+  it('shows no observer and no uptime', () => {
+    const labels = [...document.querySelectorAll('.hud__read .hud__row span')]
+      .map((s) => s.textContent.trim().toLowerCase());
+    expect(labels).toEqual(['phase', 'state', 'coherence']);
+    expect(document.querySelector('[data-hud-uptime]')).toBeNull();
+    expect(document.querySelector('.hud__read .hud__rule')).toBeNull();
+  });
+
+  it('runs no timer for it', () => {
+    /* Narrow on purpose: hud.js still uses setInterval for the scramble on
+       hovered links. What must not come back is time counted since load. */
+    expect(read('js/hud.js')).not.toMatch(/data-hud-uptime|Date\.now\(\)\s*-/);
+  });
+});
+
+/* NO WALL CLOCK, AND NO TIME ZONE. The bar and the phone readout used to show
+   "GMT+5:30" and a live clock in Asia/Kolkata - which tells every visitor
+   roughly where the owner lives. Both are gone, on both builds, and nothing
+   computes a local time to put anywhere. */
+describe('no clock, no time zone', () => {
+  it('shows no time zone anywhere on the page', () => {
+    expect(document.body.textContent).not.toMatch(/\b(GMT|UTC)\s*[+-]\s*\d/);
+  });
+
+  it('has no clock in the bar or in the phone readout', () => {
+    ['.bar__clock', '.bar__zone', '[data-clock-time]', '[data-m-time]']
+      .forEach((sel) => expect(document.querySelector(sel), sel).toBeNull());
+  });
+
+  it('computes no local time in any script', () => {
+    ['js/hud.js', 'js/mobile.js'].forEach((f) => {
+      const src = read(f);
+      expect(src, f).not.toMatch(/Asia\/Kolkata/);
+      expect(src, f).not.toMatch(/data-(clock|m)-time/);
+    });
+  });
+
+  it('keeps the phone readout - the name and the phase - visible', () => {
+    /* It hid its clock with `.m-read span:last-child`. With the clock gone,
+       the name-and-phase span IS the last child, so that rule would have
+       hidden the whole readout. */
+    const spans = [...document.querySelectorAll('.m-read > span')];
+    expect(spans).toHaveLength(1);
+    expect(spans[0].querySelector('[data-m-phase]')).not.toBeNull();
+    expect(read('css/mobile.css')).not.toMatch(/\.m-read\s+span:last-child\s*\{[^}]*display\s*:\s*none/);
   });
 });
 

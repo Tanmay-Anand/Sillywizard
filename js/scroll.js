@@ -30,10 +30,70 @@ window.PAGE.register('scroll', function (scope) {
 
   var COUNT = panes.length;              // 5 phases
   var VH = window.innerHeight;
-  /* One viewport of travel per phase, plus one more for the footer to come
-     up in. The footer is not a sixth phase — the substrate holds DIFFUSE
-     while it arrives. */
-  var MAX = VH * COUNT;
+
+  /* ---- THE PIN -----------------------------------------------------------
+     A pane with data-hold="N" holds the page still for N viewports of
+     scrolling: the copy stays exactly where it is, centred and fully opaque,
+     the subject stays in that phase's shape, and window.SCROLL reports how
+     far through the hold the reader has got. Then the page carries on as if
+     nothing had happened.
+
+     SYSTEMS asks for one so its eight questions (js/flow.js) can step while
+     the section is still. With every pane riding the track at one viewport
+     per phase, a section is centred for exactly ONE scroll position; eight
+     steps had to play out while it slid in and out, so the first had gone
+     past before a reader had noticed the section arrive.
+
+     Implemented as a flat segment in the map from scroll pixels to phase
+     number, and nowhere else. Every pane, the tear, the footer, the
+     background words and the substrate already read the phase number, so
+     they all hold together without being told; a page with no holds maps
+     exactly as it always did. */
+  var HOLDS = Array.prototype.map.call(panes, function (p) {
+    return Math.max(0, parseFloat(p.getAttribute('data-hold')) || 0);
+  });
+  var STARTS = [], MAX = 0;
+  function layout() {
+    var px = 0;
+    for (var i = 0; i < COUNT; i++) {
+      STARTS[i] = px;                    // where phase i, and its hold, begin
+      px += HOLDS[i] * VH + VH;
+    }
+    /* One viewport of travel per phase, plus one more for the footer to come
+       up in. The footer is not a sixth phase — the substrate holds DIFFUSE
+       while it arrives. */
+    MAX = px;
+  }
+  layout();
+
+  /* Scroll pixels -> phase number, plus which hold (if any) and how far in.
+     EPS because the eased approach to a pin from below never quite arrives:
+     half a pixel short of it is on it. One object, reused every frame. */
+  var EPS = 0.5;
+  var AT = { phase: 0, hold: -1, t: 0 };
+  function phaseAt(px) {
+    for (var i = COUNT - 1; i >= 0; i--) {
+      var s = STARTS[i], h = HOLDS[i] * VH;
+      if (px < s - (h > 0 ? EPS : 0)) continue;
+      if (h > 0 && px < s + h) {
+        AT.phase = i; AT.hold = i; AT.t = Math.max(0, (px - s) / h);
+      } else {
+        AT.phase = i + Math.max(0, px - s - h) / VH; AT.hold = -1; AT.t = 0;
+      }
+      return AT;
+    }
+    AT.phase = 0; AT.hold = -1; AT.t = 0;
+    return AT;
+  }
+
+  /* Phase number -> scroll pixels, for GOTO and the bar. A whole number
+     lands at the START of that phase's hold, so the button for SYSTEMS
+     arrives on its first question rather than halfway through them. */
+  function pxOf(phase) {
+    var i = Math.min(COUNT - 1, Math.max(0, Math.floor(phase)));
+    var f = phase - i;
+    return STARTS[i] + (f > 0 ? HOLDS[i] * VH + f * VH : 0);
+  }
 
   var target = 0, current = 0;
   var EASE = 0.10;                       // seconds to close ~63% of the gap
@@ -71,7 +131,7 @@ window.PAGE.register('scroll', function (scope) {
   var btns = scope.querySelectorAll('[data-goto]');
   Array.prototype.forEach.call(btns, function (b) {
     b.addEventListener('click', function () {
-      target = clamp(parseFloat(b.dataset.goto) * VH);
+      target = clamp(pxOf(parseFloat(b.dataset.goto)));
     });
   });
 
@@ -80,10 +140,10 @@ window.PAGE.register('scroll', function (scope) {
      directly — but keyboard focus has to be able to bring a phase on screen
      (js/a11y.js), so there is exactly one door, and it goes through the same
      easing as a wheel gesture rather than teleporting. */
-  window.GOTO = function (phase) { target = clamp(phase * VH); };
+  window.GOTO = function (phase) { target = clamp(pxOf(phase)); };
 
   function onResize() {
-    VH = window.innerHeight; MAX = VH * COUNT;
+    VH = window.innerHeight; layout();
     target = clamp(target);
   }
   window.addEventListener('resize', onResize);
@@ -163,11 +223,18 @@ window.PAGE.register('scroll', function (scope) {
     // framerate-independent exponential approach
     current += (target - current) * (1 - Math.exp(-dt / EASE));
 
-    var pxPhase = current / VH;                    // 0 .. COUNT
+    var at = phaseAt(current);
+    var pxPhase = at.phase;                        // 0 .. COUNT, flat in a hold
     var progress = Math.min(current / MAX, 1);
 
-    // the copy track
-    track.style.transform = 'translate3d(0,' + (-current) + 'px,0)';
+    /* Read-only, for anything that has to know about the pin (js/flow.js).
+       The accumulator itself stays private - see GOTO. */
+    var SC = window.SCROLL || (window.SCROLL = {});
+    SC.phase = pxPhase; SC.hold = at.hold; SC.t = at.t;
+
+    /* The copy track, from the PHASE rather than the raw pixels, so a hold
+       holds it. Without holds the two are the same number. */
+    track.style.transform = 'translate3d(0,' + (-pxPhase * VH).toFixed(2) + 'px,0)';
 
     // the substrate: phase position, and a rotation tied to the same number
     if (window.SUBSTRATE) {
