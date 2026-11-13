@@ -134,13 +134,14 @@ body.is-light .hud__mini{ filter:invert(1); }
 .hud__xy--y{ right:0; bottom:-16px; }
 
 
-.hud__read{ position:absolute; right:var(--inset); top:var(--inset); width:210px; }
-.hud__row{ display:flex; justify-content:space-between; gap:12px; }
+/* One row now, so the block hugs its text instead of spreading a label and
+   its value 210px apart; anchored right, it grows leftward as the phase name
+   gets longer. */
+.hud__read{ position:absolute; right:var(--inset); top:var(--inset); }
+.hud__row{ display:flex; gap:14px; }
 .hud__row span{ color:var(--label); }
 .hud__row b{ font-weight:400; color:var(--fog); }
 .hud__row b[data-hud-phase]{ color:var(--red); }
-/* The falling number, and the state it drags with it. */
-.hud__row b.is-low{ color:var(--red); }
 
 .hud__edge{ position:absolute; top:50%; margin:0; color:var(--label); white-space:nowrap; }
 .hud__edge--l{ left:var(--inset);  transform:translateY(-50%) rotate(180deg);
@@ -479,9 +480,10 @@ body.is-light .hud__mini{ filter:invert(1); }
    its panel, so a column that also tracked the pointer meant the card under
    the cursor kept changing while the panel flickered between projects. Two
    bands of three need no gesture at all. */
+:root{ --disp-col-w:min(300px, 26vw); --disp-slot-w:min(240px, 21vw); --disp-row-gap:11px; }
 .disp__feat{
   position:absolute; right:var(--disp-side); top:23%;
-  width:min(300px, 26vw); display:flex; flex-direction:column; gap:14px;
+  width:var(--disp-col-w); display:flex; flex-direction:column; gap:14px;
 }
 .pcard{
   border:1px solid var(--line); padding:12px 14px;
@@ -514,6 +516,31 @@ body.is-light .hud__mini{ filter:invert(1); }
 .pcard:hover{ border-color:var(--red-ghost); }
 /* The project whose panel is open. */
 .pcard.is-active{ border-color:var(--red); }
+
+/* THE PROJECT'S MARK - its own symbol, cropped from its own logo file
+   (assets/marks/README.md). Floated beside the name, so it narrows only the
+   first line or two: as a full-height column it would push every
+   description onto an extra line, and the right column down into the
+   SCROLL readout. Sized by a box rather than a height, so a wide mark
+   (Vantix, GoblinKit) shrinks to fit instead of crowding the name.
+   flow-root on the card keeps a short card from letting the float hang out
+   of its bottom edge.
+
+   GREYSCALE AT REST. In colour the six are pink, black, black, green, blue
+   and green - side by side, a sponsor strip on a page that is otherwise ink,
+   red and paper. Colour arrives with attention: hover, keyboard focus, or
+   the card whose panel is open, the same moment its border turns. */
+.pcard{ display:flow-root; }
+.pcard__mark{
+  float:right; width:auto; height:auto; max-width:52px; max-height:34px;
+  margin:1px 0 6px 12px;
+  filter:grayscale(1); opacity:.72;
+  transition:filter 200ms linear, opacity 200ms linear;
+}
+.pcard:hover .pcard__mark,
+.pcard:focus-visible .pcard__mark,
+.pcard.is-active .pcard__mark{ filter:none; opacity:1; }
+@media (prefers-reduced-motion: reduce){ .pcard__mark{ transition:none; } }
 
 /* ---- THE REVEAL -------------------------------------------------------------
    A project surfaces OVER the particle field through a soft wave. See
@@ -584,7 +611,8 @@ body.is-light .hud__mini{ filter:invert(1); }
    narrowed it starts at 454 - over 100px past the statement's actual text,
    which ends at 348 - and still stops 35px short of the cards. */
 .reveal__panel{
-  position:absolute; left:52%; top:46%; translate:-50% -50%;
+  /* --rv-lift: js/reveal.js raises a panel that would reach the bottom row. */
+  position:absolute; left:52%; top:46%; translate:-50% calc(-50% - var(--rv-lift, 0px));
   width:min(540px, 33vw, 60vh); padding:26px 28px 24px;
   background:color-mix(in srgb, var(--ground) 94%, transparent);
   border:1px solid var(--line);
@@ -683,7 +711,7 @@ body.is-light .hud__mini{ filter:invert(1); }
    Trimming every card equally keeps the set identical, which is the whole
    point of the two bands; trimming only the bottom three would make them a
    lesser thing again. */
-@media (max-height: 820px){
+@media (max-height: 880px){
   .pcard{ padding:9px 12px; line-height:1.55; }
   .pcard span{ margin-top:4px; line-height:1.45; }
   .pcard a, .pcard s{ margin-top:6px; }
@@ -691,7 +719,6 @@ body.is-light .hud__mini{ filter:invert(1); }
      between the column's last card and the row's first, and keep the column
      clear of the readout in the top-right corner. */
   .disp__feat{ gap:10px; top:17%; }
-  .disp__slots{ gap:8px; bottom:calc(var(--chrome-b) - 53px); }
 }
 
 /* THE BOTTOM ROW RUNS AT 0.8. Every metric of the card, not just its width:
@@ -706,16 +733,48 @@ body.is-light .hud__mini{ filter:invert(1); }
 .disp__slots .pcard{ padding:10px 11px; }
 .disp__slots .pcard b{ font-size:10.5px; }
 .disp__slots .pcard span{ font-size:9px; margin-top:5px; }
+/* The bottom row's type is a step smaller, and so is its mark. */
+.disp__slots .pcard__mark{ max-width:44px; max-height:28px; margin-left:10px; }
+
+/* SHORT SCREENS: THE MARK SHRINKS TO THE NAME LINE. At 720 tall the cards
+   have no line to spare (see the max-height:880px block above, measured to
+   leave 16px between the column and the row). A full-size mark spans the
+   name AND the first line of the sentence, so the sentence wraps once more:
+   13-15px on four cards, which ran the column into the row and the row into
+   the statement. The height of the name line, it sits beside the name and
+   nothing beneath it moves. After the bottom-row rule, so it wins. */
+@media (max-height: 880px){
+  .pcard__mark{ max-height:18px; max-width:32px; margin:1px 0 0 8px; }
+  .disp__slots .pcard__mark{ max-height:15px; max-width:26px; margin-left:8px; }
+}
 .disp__slots .pcard a,
 .disp__slots .pcard s{ font-size:calc(var(--ui-10) * .8); margin-top:7px; }
 
+/* CENTRED, UNTIL THE COLUMN SAYS OTHERWISE. With a fourth card the right
+   column reaches down to the row's height, and at most widths the centred row
+   ran under it - 99px of overlap at 1280 wide, Carta on top of GoblinKit. So
+   the row is centred or ends 14px short of the column, whichever is further
+   left. It slides along the same baseline, below the statement's height, so it
+   cannot reach anything new; on a wide screen it stays dead centre. */
 .disp__slots{
-  position:absolute; left:50%; transform:translateX(-50%);
+  position:absolute;
+  --disp-row-w:calc(3 * var(--disp-slot-w) + 2 * var(--disp-row-gap));
+  left:min(calc(50% - var(--disp-row-w) / 2),
+           calc(100% - var(--disp-side) - var(--disp-col-w) - 14px - var(--disp-row-w)));
   /* Measured against the instruments rather than guessed: the scroll readout
      occupies 831–846 on a 900-tall screen and the bar the last 28px, so the
      row ends at 100px up and clears both with room to spare. */
   bottom:calc(var(--chrome-b) - 45px);
-  display:grid; grid-template-columns:repeat(3, min(240px, 21vw)); gap:11px;
+  display:grid; grid-template-columns:repeat(3, var(--disp-slot-w)); gap:var(--disp-row-gap);
+}
+@media (max-height: 880px){
+  /* AFTER the rule above, not inside the earlier short-screen block: at
+     equal specificity the later rule wins, and from up there this never
+     applied at all. Just above the bar - it used to stay higher to clear
+     the SCROLL readout, but the row now always ends left of the column,
+     and the readout sits under the column, so the row can drop. At
+     1280x720 that turns 5px under the statement's last line into room. */
+  .disp__slots{ --disp-row-gap:8px; bottom:calc(var(--bar-h) + 16px); }
 }
 
 /* Placeholder copy is marked in the DESIGN, not just the source, so an

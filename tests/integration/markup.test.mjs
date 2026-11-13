@@ -139,18 +139,23 @@ describe('the owner is named where people look', () => {
   });
 });
 
-/* THE HUD READS PHASE, STATE AND COHERENCE - and stops there. The
-   OBSERVER / UPTIME pair beneath a rule was removed at the owner's request. */
+/* THE HUD READS THE PHASE - and stops there. OBSERVER / UPTIME, then STATE
+   and COHERENCE, were removed at the owner's request. */
 describe('the HUD readout', () => {
-  it('keeps phase, state and coherence', () => {
-    ['[data-hud-phase]', '[data-hud-state]', '[data-hud-coh]']
-      .forEach((sel) => expect(document.querySelector(sel), sel).not.toBeNull());
+  it('keeps the phase', () => {
+    expect(document.querySelector('[data-hud-phase]')).not.toBeNull();
+  });
+
+  it('shows no state and no coherence, and computes neither', () => {
+    expect(document.querySelector('[data-hud-state]')).toBeNull();
+    expect(document.querySelector('[data-hud-coh]')).toBeNull();
+    expect(read('js/hud.js')).not.toMatch(/data-hud-(state|coh)|S\.energy/);
   });
 
   it('shows no observer and no uptime', () => {
     const labels = [...document.querySelectorAll('.hud__read .hud__row span')]
       .map((s) => s.textContent.trim().toLowerCase());
-    expect(labels).toEqual(['phase', 'state', 'coherence']);
+    expect(labels).toEqual(['phase']);
     expect(document.querySelector('[data-hud-uptime]')).toBeNull();
     expect(document.querySelector('.hud__read .hud__rule')).toBeNull();
   });

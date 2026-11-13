@@ -142,13 +142,33 @@ window.PAGE.register('reveal', function (scope) {
       });
     }
 
+    /* NEVER OVER THE BOTTOM ROW. The panel is centred on the screen, so a tall
+       one - GoblinKit's, one full-width capture - grew down over the row of
+       cards and hid the very card it had opened from. Measured with no lift,
+       then raised until it clears the row's top edge by LIFT_GAP; never raised
+       past 16px from the top of the screen, so a panel too tall for the room
+       keeps its own top edge rather than the row's. The phone positions its
+       panel differently (css/mobile.css) and has no row beside it. */
+    var LIFT_GAP = 28;
+    var row = pane.querySelector('.disp__slots');
+    function lift(L) {
+      L.el.style.setProperty('--rv-lift', '0px');
+      if (!row || PHONE) return;
+      var p = L.panel.getBoundingClientRect();
+      var up = p.bottom - (row.getBoundingClientRect().top - LIFT_GAP);
+      if (up <= 0) return;
+      up = Math.min(up, Math.max(0, p.top - 16));
+      L.el.style.setProperty('--rv-lift', up.toFixed(1) + 'px');
+    }
+
     /* The origin: the panel's nearest point to the hovered item, pulled a
        little inside so the wave starts ON the panel rather than at its rim.
        --rmax is the distance to the panel's farthest corner plus the soft
        edge, so the wave always finishes having uncovered all of it. */
     function place(L, item, at) {
       var box = L.el.getBoundingClientRect();
-      var p = L.panel.getBoundingClientRect();
+      lift(L);
+      var p = L.panel.getBoundingClientRect();     // measured after the lift
       var r = item.getBoundingClientRect();
       var cx = at ? at.x : r.left + r.width / 2, cy = at ? at.y : r.top + r.height / 2;
       var ox = Math.max(p.left + 22, Math.min(p.right - 22, cx));

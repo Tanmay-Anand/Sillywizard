@@ -26,8 +26,8 @@ real network, a real training log or a real workbook on a public page.
 |---|---|---|---|
 | `contractsentinel-overview.webp` | ContractSentinel | Service overview: contract health per service, worst first, with live traces and latency | five invented services, served to the page by intercepting its API calls |
 | `contractsentinel-drift.webp` | ContractSentinel | Contract changes, each with severity and the callers it affects | same |
-| `carta-map.webp` | Carta | The desktop survey map with a device selected, every claim shown beside its evidence | a synthetic snapshot file of a fictional `192.168.10.0/24`. **No real network was surveyed** |
-| `carta-phone.webp` | Carta | The same survey below 760px: the map fills the screen and the device sits in a sheet that slides up from the bottom | same |
+| `carta-map.webp` | Carta | The desktop survey map with a device selected, every claim shown beside its evidence | a synthetic snapshot file of a fictional `192.168.10.0/24`, the same one the Android capture below shows. **No real network was surveyed** |
+| `carta-app.webp` | Carta | The Android app: the map, the selected device in a sheet below, and the app's own Compare and Survey buttons | the debug build on an emulator, with the same synthetic survey written into the app's private storage; the app was uninstalled afterwards, which took the survey with it |
 | `praxis-report.webp` | Praxis Chess | Game analysis: nine flagged moves with severity, motif, engine best move and a written explanation | the capture set from the Praxis Chess site, taken against its demo library |
 | `praxis-today.webp` | Praxis Chess | Today: the day's focus with its evidence, the deck counters and the streak | same |
 | `forte-progress.webp` | Forte | One lift's working weight climbing across eight weeks | a temporary seed written into a throwaway SQLite database on an emulator |
@@ -49,6 +49,10 @@ alone. It came off when the section became OPEN SOURCE: it was the one card
 with no public code to point at.
 
 ## When each was taken
+
+Carta and Redkeep were re-taken again on 2026-11-13: Carta's phone frame is now the
+real Android app rather than the browser at phone width, and Redkeep's are the
+captures from its README after its redesign.
 
 The Carta, Forte and Praxis Chess frames were re-taken on 2026-10-28 against the
 current builds: Carta had gained a phone layout, Forte an Active Workout screen

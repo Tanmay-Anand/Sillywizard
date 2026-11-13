@@ -1,9 +1,9 @@
 /* ==========================================================================
    hud.js — the instruments.
 
-   EVERY NUMBER ON SCREEN IS REAL. The coordinates are the real pointer, the
-   point count is the real point count, and coherence is derived from the
-   substrate's actual phase energy. Nothing here is a decorative digit rolling for effect.
+   EVERY NUMBER ON SCREEN IS REAL. The coordinates are the real pointer and
+   the scroll readout is the real scroll. Nothing here is a decorative digit
+   rolling for effect.
 
    That is what buys the tone. The readouts are trustworthy, so when one of
    them says something it has no business saying, it lands as an observation
@@ -16,8 +16,7 @@ window.PAGE.register('hud', function (scope) {
   var $ = function (s) { return scope.querySelector(s); };
 
   var dot = $('[data-hud-dot]');
-  var elPhase = $('[data-hud-phase]'), elState = $('[data-hud-state]');
-  var elCoh = $('[data-hud-coh]');
+  var elPhase = $('[data-hud-phase]');
   var elProgN = $('[data-hud-progn]'), elProgBar = $('[data-hud-progbar]');
 
   var PHASES = window.SUBSTRATE_PHASES || [];
@@ -26,8 +25,8 @@ window.PAGE.register('hud', function (scope) {
      rewrote itself on every phase change and every ten seconds or so -
      removed at the owner's request, along with everything that fed it: the
      per-phase lines, the ambient lines and the coherence thresholds. The
-     readouts that remain (phase, state, coherence, scroll) are unchanged.
-     OBSERVER and UPTIME went the same way, also at the owner's request. */
+     readouts that remain (phase, scroll) are unchanged. OBSERVER, UPTIME,
+     STATE and COHERENCE went the same way, also at the owner's request. */
 
   /* ---- pointer ----------------------------------------------------------- */
   var mx = 0, my = 0;
@@ -55,32 +54,6 @@ window.PAGE.register('hud', function (scope) {
 
     var idx = Math.round(Math.min(S.progress, PHASES.length - 1));
     if (elPhase) elPhase.textContent = PHASES[idx] || '--';
-
-    /* Coherence falls as the material loses structure, and dips further
-       while it is actually in transit between two states. */
-    var coh = Math.max(0, 1 - S.energy * 0.82 - Math.sin(S.morph * Math.PI) * 0.18);
-    if (elCoh) {
-      elCoh.textContent = coh.toFixed(3);
-      /* The one readout that is going somewhere. It turns as it falls, so
-         the number is doing the storytelling rather than just existing. */
-      elCoh.classList.toggle('is-low', coh < 0.32);
-    }
-
-    /* STATE ESCALATES WITH COHERENCE rather than reporting two booleans.
-       The old version said 'stable' for four fifths of the page and then
-       'unstable' at the very end, which is a light switch, not a descent —
-       and the descent is the thing the ending has to earn. */
-    if (elState) {
-      var st;
-      if (S.tearRed > 0.02)        st = 'containment failed';
-      else if (coh > 0.78)         st = 'stable';
-      else if (coh > 0.55)         st = 'drifting';
-      else if (coh > 0.32)         st = 'degrading';
-      else if (coh > 0.12)         st = 'unstable';
-      else                         st = 'critical';
-      elState.textContent = st;
-      elState.classList.toggle('is-low', coh < 0.32 || S.tearRed > 0.02);
-    }
 
     var pr = S.scrollProgress || 0;
     if (elProgN) elProgN.textContent = pad(Math.round(pr * 100), 3);
