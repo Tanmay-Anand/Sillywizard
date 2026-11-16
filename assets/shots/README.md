@@ -69,6 +69,11 @@ than being cropped to it (`.rv__shot--tall`).
 
 ## Re-capturing
 
+After replacing any file here (or in `assets/marks/`), run
+`python tools/stamp-assets.py`. The site caches `/assets/*` for a year, so a
+replaced capture is only seen once its URL changes; the script puts each file's
+content hash in its URL, and `tools/check.py` fails until you do.
+
 There is no committed capture script - each application needs its own stand-in
 data, and the data is the part that must not be guessed. What each capture
 needed is in the table above.

@@ -1,4 +1,5 @@
-import { existsSync } from 'node:fs';
+import { createHash } from 'node:crypto';
+import { existsSync, readFileSync } from 'node:fs';
 import { beforeAll, describe, expect, it } from 'vitest';
 import { loadPage, read } from '../helpers/site.mjs';
 
@@ -255,7 +256,7 @@ describe('projects', () => {
         const img = sh.querySelector('img');
         expect(img, name).not.toBeNull();
         expect(sh.classList.contains('slot'), name).toBe(false);
-        expect(existsSync(img.getAttribute('src')), img.getAttribute('src')).toBe(true);
+        expect(existsSync(img.getAttribute('src').split('?')[0]), img.getAttribute('src')).toBe(true);
         expect(img.getAttribute('alt').trim(), name).not.toBe('');
         /* Reserved geometry, so opening a panel does not reflow it. */
         expect(Number(img.getAttribute('width')), name).toBeGreaterThan(0);
@@ -289,6 +290,28 @@ describe('every local file the page references exists', () => {
     const refs = [...html.matchAll(/(?:href|src)="([^"]+)"/g)].map((m) => m[1])
       .filter((u) => !/^(https?:|mailto:|#|data:)/.test(u));
     expect(refs.length).toBeGreaterThan(0);
-    refs.forEach((u) => expect(existsSync(u.replace(/^\//, '')), u).toBe(true));
+    refs.forEach((u) => expect(existsSync(u.replace(/^\//, '').replace(/\?.*$/, '')), u).toBe(true));
+  });
+});
+
+/* A REPLACED IMAGE IS A NEW URL. _headers caches /assets/* for a year,
+   immutable - right for generated art, wrong for a capture that gets
+   re-taken under the same name: a visitor who saw the old Redkeep dashboard
+   kept seeing it beside a page that had moved on. Every capture and project
+   mark carries ?v= and the first 10 hex of its file's SHA-256, so new content
+   is a new URL that no cache can answer. tools/stamp-assets.py writes them. */
+describe('captures and marks are fingerprinted', () => {
+  const refs = [...read('index.html').matchAll(/src="(assets\/(?:shots|marks)\/[^"]+)"/g)].map((m) => m[1]);
+  const sha = (f) => createHash('sha256').update(readFileSync(f)).digest('hex').slice(0, 10);
+
+  it('finds the references it is guarding', () => {
+    expect(refs.length).toBeGreaterThan(20);
+  });
+
+  it('stamps every one with its own content hash', () => {
+    refs.forEach((u) => {
+      const [path, query] = u.split('?');
+      expect(query, u).toBe(`v=${sha(path)}`);
+    });
   });
 });

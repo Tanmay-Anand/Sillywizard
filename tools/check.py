@@ -13,7 +13,7 @@ to open.
 Exit code 0 clean, 1 if anything FAILED. Warnings do not fail the run.
 """
 
-import os, re, subprocess, sys
+import hashlib, os, re, subprocess, sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 os.chdir(ROOT)
@@ -68,7 +68,7 @@ def check_css():
 def check_paths():
     refs = set()
     for m in re.finditer(r'(?:href|src)\s*=\s*"([^"]+)"', HTML):
-        refs.add(m.group(1))
+        refs.add(m.group(1).split('?')[0])      # ?v= is a fingerprint, not part of the file
     for f in CSS:
         # Drop data: URIs whole before scanning. The grain is an inline SVG
         # that contains its OWN url(%23n) filter reference, and scanning into
@@ -206,6 +206,22 @@ def check_meta():
 
 
 # ---- 6 · generated assets exist and are not obviously stale ---------------
+# ---- 6b · captures and marks carry their content hash ----------------------
+# _headers caches /assets/* for a year, immutable. A capture replaced under the
+# same name was therefore served stale to anyone who had seen the old one -
+# the redesigned Redkeep dashboard showed as the old dark one. Each reference
+# carries ?v=<first 10 hex of SHA-256>, so new content is a new URL.
+def check_stamps():
+    for m in re.finditer(r'src="(assets/(?:shots|marks)/[^"?]+)(?:\?v=([0-9a-f]*))?"', HTML):
+        path, v = m.group(1), m.group(2)
+        if not os.path.exists(path):
+            continue                                # check_paths reports a missing file
+        want = hashlib.sha256(open(path, 'rb').read()).hexdigest()[:10]
+        if v != want:
+            fail('%s is %s - run: python tools/stamp-assets.py'
+                 % (path, 'not fingerprinted' if v is None else 'fingerprinted for an older file'))
+
+
 def check_assets():
     gen = ['assets/og-image.jpg', 'assets/favicon-32.png', 'assets/favicon-180.png',
            'assets/bust-mobile.webp', 'assets/tear-edge.svg']
@@ -239,7 +255,7 @@ def check_shipping():
 def main():
     for fn in (check_js_syntax, check_css, check_paths, check_registry,
                check_phase_names,
-               check_meta, check_assets, check_shipping):
+               check_meta, check_stamps, check_assets, check_shipping):
         try:
             fn()
         except Exception as e:                      # a broken check is a warning,
