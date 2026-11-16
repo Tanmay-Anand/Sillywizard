@@ -147,7 +147,8 @@ describe('the project marks', () => {
       const marks = c.querySelectorAll('img.pcard__mark');
       expect(marks, nameOf(c)).toHaveLength(1);
       const slug = nameOf(c).toLowerCase().replace(/[^a-z]/g, '').replace('praxischess', 'praxis');
-      expect(marks[0].getAttribute('src'), nameOf(c)).toBe(`assets/marks/${slug}.webp`);
+      // the path - the ?v= fingerprint after it is checked in markup.test.mjs
+      expect(marks[0].getAttribute('src').split('?')[0], nameOf(c)).toBe(`assets/marks/${slug}.webp`);
     });
   });
 
@@ -203,7 +204,7 @@ describe('Carta in OPEN SOURCE', () => {
     const tpl = carta().querySelector('template').content;
     expect([...tpl.querySelectorAll('.rv__cap')].map((c) => c.textContent.trim()))
       .toEqual(['// desktop', '// mobile app']);
-    expect([...tpl.querySelectorAll('.rv__shot img')].map((i) => i.getAttribute('src')))
+    expect([...tpl.querySelectorAll('.rv__shot img')].map((i) => i.getAttribute('src').split('?')[0]))
       .toEqual(['assets/shots/carta-map.webp', 'assets/shots/carta-app.webp']);
   });
 

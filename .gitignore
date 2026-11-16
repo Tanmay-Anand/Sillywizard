@@ -2,6 +2,7 @@
 # check.py, which CI runs on every push, so it has to be in the repository.
 tools/*
 !tools/check.py
+!tools/stamp-assets.py
 serve.py
 
 # Test tooling
